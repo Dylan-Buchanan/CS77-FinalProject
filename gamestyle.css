@@ -1,0 +1,32 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:700italic,400,300,700);
+
+
+body{
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 300;
+	padding-top: 0 !important;
+	background-color:#555A64;
+/*	background-image: url(/images2014/bgcnbl.jpg);
+	background-size: cover;*/
+/*	background-repeat: no-repeat;
+	background-position: top center !important;*/
+	background-attachment: fixed;
+	font-size: 14px;
+}
+
+.canvas-container {
+    text-align: center;
+}
+
+.contentWrapper{
+    display: flex;
+    background:#FFF;
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 20px;
+    width: calc(100vw - 40px);
+    height: calc(100vh - 40px); 
+    justify-content: center;
+    align-items: center;
+}

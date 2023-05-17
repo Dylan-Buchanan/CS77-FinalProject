@@ -7,6 +7,7 @@
 - Generate walls
 - Implement Transformations
 - Implement Game Scenario
+- Change Shapes and Position from User Input
 - Implement Collisions
 - Shading
 - Clean up game and optimize
