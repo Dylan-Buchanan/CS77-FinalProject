@@ -46,7 +46,7 @@ var BlackFragmentSource = `
     }
 `;
 
-var speed = 0.2;
+var speed = 0.01;
 var tallest = 4.0;
 var shortest = 0.41;
 var skinniest = 0.41;
@@ -96,7 +96,6 @@ document.addEventListener('keyup', (event) => {
 document.addEventListener('keydown', (event) => {
 
     const key = event.key;
-    console.log(key);
   
     if (key in keyStates) {
         keyStates[key] = true;
@@ -112,7 +111,7 @@ function checkKeyStates() {
     if (w) {
       // Perform action when W is pressed
         height += speed;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
     
     if (a) {
@@ -124,42 +123,50 @@ function checkKeyStates() {
     if (s) {
       // Perform action when S is pressed
         height = Math.max(height -= speed, -1.5);
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
     
     if (d) {
       // Perform action when D is pressed
         trans += speed;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
     if (ArrowUp) {
         // Perform action when up is pressed
-        console.log("Here");
-        moveUp();
+        if (Math.abs(CubePositions[10] - CubePositions[1]) < tallest) {
+            changeShape(CubePositions, topCube, speed, true);
+        }
         upped = true;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
       
     if (ArrowDown) {
     // Perform action when down is pressed
-        moveDown();
+        if (Math.abs(CubePositions[10] - CubePositions[1]) > shortest) {
+            changeShape(CubePositions, topCube, speed, false);
+        }
         downed = true;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
       
     if (ArrowLeft) {
-        console.log("Here 3");
     // Perform action when left is pressed
-        moveLeft();
+        if (Math.abs(CubePositions[3] - CubePositions[0]) < widest) {
+            changeShape(CubePositions, leftCube, speed, false);
+            changeShape(CubePositions, rightCube, speed, true);
+        }
         widened = true;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
       
     if (ArrowRight) {
     // Perform action when right is pressed
-        moveSkinny();
+        if (Math.abs(CubePositions[3] - CubePositions[0]) > shortest) {
+            changeShape(CubePositions, leftCube, speed, true);
+            changeShape(CubePositions, rightCube, speed, false);
+        }
         widened = true;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
 
   }
@@ -176,9 +183,6 @@ Game.prototype.render = function(gl, w, h)
     var projection = Matrix.perspective(45, w/h, 0.1, 100);    
     var view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(0, 1.5, 0)).inverse();
     var wallModel = Matrix.translate(0, 1., -5).multiply(Matrix.scale(3., 1.5, 1.));
-
-    // check for the key states constantly for smooth movement
-    checkKeyStates();
 
     // check for the key states constantly for smooth movement
     checkKeyStates();
