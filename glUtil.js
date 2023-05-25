@@ -15,8 +15,8 @@ function setupTask(canvasId, taskFunction) {
     
     var renderWidth, renderHeight;
     function computeCanvasSize() {
-        renderWidth = Math.min(canvas.parentNode.clientWidth - 20, 820);
-        renderHeight = Math.floor(renderWidth*9.0/16.0);
+        renderWidth = Math.floor(canvas.parentNode.clientWidth);
+        renderHeight = Math.floor(canvas.parentNode.clientHeight);
         canvas.width  = renderWidth;
         canvas.height = renderHeight;
         gl.viewport(0, 0, renderWidth, renderHeight);
@@ -107,7 +107,7 @@ function createShaderObject(gl, shaderSource, shaderType) {
 }
 function createShaderProgram(gl, vertexSource, fragmentSource) {
     // Create shader objects for vertex and fragment shader
-    var   vertexShader = createShaderObject(gl,   vertexSource, gl.  VERTEX_SHADER);
+    var vertexShader = createShaderObject(gl, vertexSource, gl.VERTEX_SHADER);
     var fragmentShader = createShaderObject(gl, fragmentSource, gl.FRAGMENT_SHADER);
     
     // Create a shader program
