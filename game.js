@@ -90,7 +90,6 @@ function moveDown()
 
 function moveLeft()
 {
-    console.log("here");
     CubePositions[0] -= speed;
     CubePositions[9] -= speed;
     CubePositions[12] -= speed;
@@ -156,7 +155,6 @@ document.addEventListener('keyup', (event) => {
   
     if (key in keyStates) {
         keyStates[key] = false;
-        // checkKeyStates();
     }
 });
 
@@ -168,7 +166,6 @@ document.addEventListener('keydown', (event) => {
   
     if (key in keyStates) {
         keyStates[key] = true;
-        // checkKeyStates();
     }
 });
 
@@ -230,9 +227,28 @@ function checkKeyStates() {
         cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
 
-  }
+}
 
-var previousTime = performance.now();
+let score = 0;
+
+function updateScore(cubePosition, wallPosition, wallSize) {
+  const cubeVolume = 1; // Assuming the cube has a volume of 1 in the z direction
+
+  // Check if the cube collides with the wall
+  if (
+    cubePosition.x < wallPosition.x + wallSize.width &&
+    cubePosition.x + cubeVolume > wallPosition.x &&
+    cubePosition.y < wallPosition.y + wallSize.height &&
+    cubePosition.y + cubeVolume > wallPosition.y
+  ) {
+    return score; // Return the score when collision occurs
+  } 
+  else {
+    score += cubeVolume; // Add cube's volume to the score
+    return null; // Return null to indicate no collision occurred
+  }
+}
+
 
 Game.prototype.render = function(gl, w, h)
 {

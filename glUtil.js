@@ -15,8 +15,9 @@ function setupTask(canvasId, taskFunction) {
     
     var renderWidth, renderHeight;
     function computeCanvasSize() {
-        renderWidth = Math.min(canvas.parentNode.clientWidth - 20, 820);
-        renderHeight = Math.floor(renderWidth*9.0/16.0);
+        // Updated the height and width change of the canvas
+        renderWidth = Math.floor(canvas.parentNode.clientWidth);
+        renderHeight = Math.floor(canvas.parentNode.clientHeight);
         canvas.width  = renderWidth;
         canvas.height = renderHeight;
         gl.viewport(0, 0, renderWidth, renderHeight);
