@@ -244,9 +244,9 @@ function updateScore(cubePosition, wallPosition, wallSize) {
 
 var maxHeight = 2;
 var minHeight = 0;
-var velocity;
-var gravity = .001;
-var fall = false;
+var velocity = 0;
+var gravity = .0001;
+var jumping = false;
 
 Game.prototype.render = function(gl, w, h)
 {
@@ -261,26 +261,40 @@ Game.prototype.render = function(gl, w, h)
     var roadModel = Matrix.translate(0, 0, 0).multiply(Matrix.scale(1.5, 1, 20));
 
     // The total height that the cube will reach with velocity
-    var velocity = Math.min(160, spacePressDuration) / 2000;
-    var bouncing = false;
-    var jumpInProgress = false;
-
+    // var velocity = Math.min(160, spacePressDuration) / 2000;
     
     
     // becomes true when space bar is released
-    if (spaceHasBeenPressed) {
+    if (spaceHasBeenPressed && ! jumping) {
+        velocity = Math.min(160, spacePressDuration) / 2000;
+        spaceHasBeenPressed = false;
+        jumping = true;
+    }
+    
+    // else if (! jumping) {
+    //     console.log("here now");
+    //     height = Math.max(minHeight, height);
 
+    // }
+
+    if (jumping) {
         var currentTime = new Date().getTime();
         var elapsedTime = (currentTime - spacePressEndTime) / 10;
-
         velocity = velocity - gravity * elapsedTime;
         height += velocity;
         height = Math.max(minHeight, height);
         height = Math.min(maxHeight, height);
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
-
+        if (height == minHeight) {
+            console.log("Here");
+            jumping = false;
+        }
+        // cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
 
+    cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+
+
+    
     
 
     // check for the key states constantly for smooth movement
