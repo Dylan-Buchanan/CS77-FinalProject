@@ -2,142 +2,82 @@ var BlackVertexSource = `
     uniform mat4 ModelViewProjection;
     
     attribute vec3 Position;
-    
-    // TODO: Implement a simple GLSL vertex shader that applies the ModelViewProjection
-    //       matrix to the vertex Position.
-    //       Note that Position is a 3 element vector; you need to extend it by one element (1.0)
-    //       You can extend a vector 'V' by doing vec4(V, 1.0)
-    //       Store the result of the multiplication in gl_Position
-    void main() {
 
-// ################ Edit your code below
+    varying vec3 p;
+    
+    void main() {
         vec4 position = vec4(Position.x, Position.y, Position.z, 1.0);
         gl_Position = ModelViewProjection * position;
-        
-// ################
-
+        p = vec3(gl_Position);
     }
 `;
 var BlackFragmentSource = `
     precision highp float;
-    
-    // TODO: Implement a simple GLSL fragment shader that assigns a black color to gl_FragColor
-    //       Colors are vectors with 4 components (red, green, blue, alpha).
-    //       Components are in 0-1 range.
+
+    varying vec3 p;
+
+    uniform float Type;
+
+    vec3 color;
+
     void main() {
 
-// ################ Edit your code below
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-// ################
+        if (Type == 1.0) {
+            float col;
+            float col2;
+            if (p.z <= 0.0) {
+                col = 1.0;
+            }
+            else {
+                float rev = 6. - abs(p.z);
+                col = (rev * rev) / 4.0;
+            }
+
+            col2 = sqrt(4.0 - abs(p.x)) / 2.0;
+
+            color = vec3(1.0 * col * col2, 0.0, 0.0);
+        }
+       
+        else if (Type == 2.0) {
+            color = vec3(1.0, 0.0, 0.0);
+        }
+
+        else {
+            color = vec3(0.0, 0.0, 0.0);
+        }
+
+        gl_FragColor = vec4(color, 1.0);
 
     }
 `;
 
-var speed = 0.02;
-var skinniest = 0.4;
-
-function moveRight()
-{
-    CubePositions[3] += speed;
-    CubePositions[6] += speed;
-    CubePositions[18] += speed;
-    CubePositions[21] += speed;
-    CubePositions[30] += speed;
-    CubePositions[33] += speed;
-    CubePositions[39] += speed;
-    CubePositions[42] += speed;
-    CubePositions[48] += speed;
-    CubePositions[51] += speed;
-    CubePositions[54] += speed;
-    CubePositions[57] += speed;
-}
-
-function moveUp()
-{
-    if (CubePositions[7] < 4) {
-        CubePositions[7] += speed;
-        CubePositions[10] += speed;
-        CubePositions[16] += speed;
-        CubePositions[19] += speed;
-        CubePositions[25] += speed;
-        CubePositions[28] += speed;
-        CubePositions[31] += speed;
-        CubePositions[34] += speed;
-        CubePositions[52] += speed;
-        CubePositions[55] += speed;
-        CubePositions[67] += speed;
-        CubePositions[70] += speed;
-    }
-}
-
-function moveDown()
-{
-    if (CubePositions[7] > skinniest) {
-        CubePositions[7] -= speed;
-        CubePositions[10] -= speed;
-        CubePositions[16] -= speed;
-        CubePositions[19] -= speed;
-        CubePositions[25] -= speed;
-        CubePositions[28] -= speed;
-        CubePositions[31] -= speed;
-        CubePositions[34] -= speed;
-        CubePositions[52] -= speed;
-        CubePositions[55] -= speed;
-        CubePositions[67] -= speed;
-        CubePositions[70] -= speed;
-    }
-}
-
-function moveLeft()
-{
-    CubePositions[0] -= speed;
-    CubePositions[9] -= speed;
-    CubePositions[12] -= speed;
-    CubePositions[15] -= speed;
-    CubePositions[24] -= speed;
-    CubePositions[27] -= speed;
-    CubePositions[36] -= speed;
-    CubePositions[45] -= speed;
-    CubePositions[60] -= speed;
-    CubePositions[63] -= speed;
-    CubePositions[66] -= speed;
-    CubePositions[69] -= speed;
-}
-
-function moveSkinny() 
-{
-    if (CubePositions[3] - CubePositions[0] > skinniest) {
-        CubePositions[0] += speed;
-        CubePositions[9] += speed;
-        CubePositions[12] += speed;
-        CubePositions[15] += speed;
-        CubePositions[24] += speed;
-        CubePositions[27] += speed;
-        CubePositions[36] += speed;
-        CubePositions[45] += speed;
-        CubePositions[60] += speed;
-        CubePositions[63] += speed;
-        CubePositions[66] += speed;
-        CubePositions[69] += speed;
-    }
-}
+var speed = 0.05;
+var tallest = 4.0;
+var shortest = 0.41;
+var skinniest = 0.41;
+var widest = 6.0;
 
 
 var Game = function(gl)
 {
-    this.pitch = 20;
+    this.pitch = 10.;
     this.yaw = 0;
+
+    this.wall = new ShadedTriangleMesh(gl, CubePositions2, CubeNormals2, CubeIndices2, BlackVertexSource, BlackFragmentSource);
     this.cubeMesh = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
+    this.road = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     gl.enable(gl.DEPTH_TEST);
 }
 
+var dist = -4.5;
 var cubeModel;
 var trans = 0;
-var height = -1.5;
+var height = 0.;
 
 var upped = false;
 var downed = false;
 var widened = false;
+var space = false;
 
 const keyStates = {
     w: false,
@@ -147,85 +87,138 @@ const keyStates = {
     ArrowUp: false,
     ArrowDown: false,
     ArrowLeft: false,
-    ArrowRight: false
+    ArrowRight: false,
 }
 
+// variables for space bar press
+let spaceHasBeenPressed = false;
+let spacePressed = false;
+let spacePressStartTime = null;
+let spacePressDuration = 0;
+let spacePressEndTime = 0;
+
+
 document.addEventListener('keyup', (event) => {
-    const key = event.key;
-  
-    if (key in keyStates) {
-        keyStates[key] = false;
+    // Track the end time of space bar press and calculate duration
+    if (event.which == 32) {
+        if (spacePressed) {
+            spaceHasBeenPressed = true;
+            spacePressed = false;
+            const end = Date.now()
+            spacePressEndTime = end;
+            spacePressDuration = spacePressEndTime - spacePressStartTime;
+            space = false;
+            console.log("Space bar press duration:", spacePressDuration, "ms");
+        }
+    }
+
+    else {
+        const key = event.key;
+       
+        if (key in keyStates) {
+            keyStates[key] = false;
+        }
     }
 });
 
 
 document.addEventListener('keydown', (event) => {
 
-    const key = event.key;
-    console.log(key);
-  
-    if (key in keyStates) {
-        keyStates[key] = true;
+    // Track the start time of the space bar being pressed down
+    if (event.which == 32) {
+        if (!spacePressed) {
+          spacePressed = true;
+          const start = Date.now();
+          spacePressStartTime = start;
+        }
+        // var space1 = "space";
+        space = true;
+    }
+
+    else {
+        const key = event.key;
+    
+        if (key in keyStates) {
+            keyStates[key] = true;
+        }
     }
 });
+
+var cameraX = 0.;
 
 // Function to check key states and perform actions
 function checkKeyStates() {
     const { w, a, s, d, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } = keyStates;
     
+
+    if (space) {
+        // console.log("space bar duration", spaceBarDuration);
+    }
+
     // Check the state of all keys
     if (w) {
       // Perform action when W is pressed
         height += speed;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
     
     if (a) {
       // Perform action when A is pressed
         trans -= speed;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cameraX -= speed;
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
     
     if (s) {
       // Perform action when S is pressed
         height = Math.max(height -= speed, -1.5);
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
     
     if (d) {
       // Perform action when D is pressed
         trans += speed;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cameraX += speed;
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
     if (ArrowUp) {
         // Perform action when up is pressed
-        console.log("Here");
-        moveUp();
+        if (Math.abs(CubePositions[10] - CubePositions[1]) < tallest) {
+            changeShape(CubePositions, topCube, speed, true);
+        }
         upped = true;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
       
     if (ArrowDown) {
     // Perform action when down is pressed
-        moveDown();
+        if (Math.abs(CubePositions[10] - CubePositions[1]) > shortest) {
+            changeShape(CubePositions, topCube, speed, false);
+        }
         downed = true;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
       
     if (ArrowLeft) {
-        console.log("Here 3");
     // Perform action when left is pressed
-        moveLeft();
+        if (Math.abs(CubePositions[3] - CubePositions[0]) < widest) {
+            changeShape(CubePositions, leftCube, speed, false);
+            changeShape(CubePositions, rightCube, speed, true);
+        }
         widened = true;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
       
     if (ArrowRight) {
     // Perform action when right is pressed
-        moveSkinny();
+        if (Math.abs(CubePositions[3] - CubePositions[0]) > shortest) {
+            changeShape(CubePositions, leftCube, speed, true);
+            changeShape(CubePositions, rightCube, speed, false);
+        }
         widened = true;
-        cubeModel = Matrix.translate(trans, height, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
+
 
 }
 
@@ -249,18 +242,70 @@ function updateScore(cubePosition, wallPosition, wallSize) {
   }
 }
 
+var maxHeight = 2;
+var minHeight = 0;
+var velocity;
+var gravity = .001;
+var fall = false;
 
 Game.prototype.render = function(gl, w, h)
 {
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    gl.disable(gl.DEPTH_TEST);
     
     var projection = Matrix.perspective(45, w/h, 0.1, 100);    
-    var view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(0, 0, 5)).inverse();
-    var rotation = Matrix.rotate(Date.now()/25, 0, 1, 0);
+    var view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, 1.5, 0)).inverse();
+    var wallModel = Matrix.translate(0, 1., -5).multiply(Matrix.scale(3., 1.5, 1.));
+    var roadModel = Matrix.translate(0, 0, 0).multiply(Matrix.scale(1.5, 1, 20));
+
+    // The total height that the cube will reach with velocity
+    var velocity = Math.min(160, spacePressDuration) / 2000;
+    var bouncing = false;
+    var jumpInProgress = false;
+
+    
+    
+    // becomes true when space bar is released
+    if (spaceHasBeenPressed) {
+    3
+        var currentTime = new Date().getTime();
+        var elapsedTime = (currentTime - spacePressEndTime) / 10;
+
+        if (height >= maxHeight)
+        {
+            velocity = Math.abs(velocity);
+            fall = true;
+            bouncing = true;
+        }
+        else if (height <= minHeight && fall) {
+            height = minHeight;
+            velocity = 0;
+            fall = false;
+            bouncing = false;
+            jumpInProgress = false;
+            canJump = true;
+        }
+        else if (! fall); {
+            velocity = velocity - gravity * elapsedTime;
+
+        }
+
+        height += velocity;
+        height = Math.max(minHeight, height);
+        height = Math.min(maxHeight, height);
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+
+        jumpInProgress = true;
+       
+    }
+
+    
 
     // check for the key states constantly for smooth movement
     checkKeyStates();
+
 
     if (upped || downed || widened) {
         this.cubeMesh = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
@@ -270,10 +315,14 @@ Game.prototype.render = function(gl, w, h)
     }
 
     if (cubeModel) {
-        this.cubeMesh.render(gl, cubeModel, view, projection);
+        this.road.render(gl, roadModel, view, projection, 2.0);
+        this.cubeMesh.render(gl, cubeModel, view, projection, 0.0);
     }
     else {
-        cubeModel = Matrix.translate(0, -1.5, 0).multiply(Matrix.scale(0.5, 0.5, 0.5));
-        this.cubeMesh.render(gl, cubeModel, view, projection);
+        cubeModel = Matrix.translate(0, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        this.road.render(gl, roadModel, view, projection, 2.0);
+        this.cubeMesh.render(gl, cubeModel, view, projection, 0.0);
+        
     }
+    // this.wall.render(gl, wallModel, view, projection);
 }

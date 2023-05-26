@@ -8,7 +8,7 @@ var ShadedTriangleMesh = function(gl, vertexPositions, vertexNormals, indices, v
     this.shaderProgram = createShaderProgram(gl, vertexSource, fragmentSource);
 }
 
-ShadedTriangleMesh.prototype.render = function(gl, model, view, projection) {
+ShadedTriangleMesh.prototype.render = function(gl, model, view, projection, type) {
     
     gl.useProgram(this.shaderProgram);
     
@@ -16,26 +16,13 @@ ShadedTriangleMesh.prototype.render = function(gl, model, view, projection) {
     var modelViewProjection = projection.multiply(view).multiply(model);
 
     // Pass the matrix to a shader uniform
-    // IMPORTANT: OpenGL has different matrix conventions than our JS program. We need to transpose the matrix before passing it
-    // to OpenGL to get the correct matrix in the shader.
     gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "ModelViewProjection"), false, modelViewProjection.transpose().m); 
-    
-    // TODO: Currently the code only passes the model-view-projection matrix. You may need access to additional
-    //       matrices or vectors in your shaders to solve the remaining tasks. Use the existing code as a template and pass however
-    //       many additional uniforms you need.
 
-// ################ Edit your code below
-    var modelView = view.multiply(model);
-    gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "ModelView"), false, modelView.transpose().m);
-
-    var normalMatrix = Matrix.inverse(modelView).transpose();
-    gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "NormalMatrix"), false, normalMatrix.transpose().m);
-
-    gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "View"), false, view.transpose().m);
-
-    gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "Model"), false, model.transpose().m);
-// ################
-
+    // 0 = cube, 1 = wall, 2 = road
+    if (type == 0) {
+        var uniformLocation = gl.getUniformLocation(this.shaderProgram, "Type");
+        gl.uniform1f(uniformLocation, type);
+    }
     
     // OpenGL setup beyond this point
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexIbo);
