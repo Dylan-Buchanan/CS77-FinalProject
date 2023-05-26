@@ -19,10 +19,8 @@ ShadedTriangleMesh.prototype.render = function(gl, model, view, projection, type
     gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "ModelViewProjection"), false, modelViewProjection.transpose().m); 
 
     // 0 = cube, 1 = wall, 2 = road
-    if (type == 0) {
-        var uniformLocation = gl.getUniformLocation(this.shaderProgram, "Type");
-        gl.uniform1f(uniformLocation, type);
-    }
+    var uniformLocation = gl.getUniformLocation(this.shaderProgram, "Type");
+    gl.uniform1f(uniformLocation, type);
     
     // OpenGL setup beyond this point
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexIbo);
