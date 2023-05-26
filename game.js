@@ -87,6 +87,7 @@ var upped = false;
 var downed = false;
 var widened = false;
 var space = false;
+var ableToLoadJump = true;
 
 const keyStates = {
     w: false,
@@ -111,7 +112,12 @@ document.addEventListener('keyup', (event) => {
     // Track the end time of space bar press and calculate duration
     if (event.which == 32) {
         if (spacePressed) {
-            spaceHasBeenPressed = true;
+            if (ableToLoadJump) {
+                spaceHasBeenPressed = true;
+            }
+            else {
+                spaceHasBeenPressed = false;
+            }
             spacePressed = false;
             const end = Date.now()
             spacePressEndTime = end;
@@ -142,6 +148,12 @@ document.addEventListener('keydown', (event) => {
         }
         // var space1 = "space";
         space = true;
+        if (! jumping) {
+            ableToLoadJump = true;
+        }
+        else {
+            ableToLoadJump = false;
+        }
     }
 
     else {
