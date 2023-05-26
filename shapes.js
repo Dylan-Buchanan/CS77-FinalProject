@@ -1,8 +1,8 @@
 var CubePositions = [
-  -1, -1,  1,
+  -1, -1,  1, //0
    1, -1,  1,
    1,  1,  1,
-  -1,  1,  1,
+  -1,  1,  1, //
   -1, -1, -1,
   -1,  1, -1,
    1,  1, -1,
@@ -59,26 +59,8 @@ var CubeIndices = [
   20, 21, 22, 20, 22, 23,
 ];
 
-var rightCube = [
-  3, 6, 18, 21, 30,
-  33, 39, 42, 48, 51,
-  54, 57,
-];
-
-var leftCube = [
-  0, 9, 12, 15, 24, 27,
-  36, 45, 60, 63, 66,
-  69,
-]
-
-var topCube = [
-  7, 10, 16, 19, 25,
-  28, 31, 34, 52, 55,
-  67, 70,
-]
-
 // Hole Cube
-var CubePositions2 = [
+var WallPositions = [
   // Top face
   -1,  1,  1,
    1,  1,  1,
@@ -104,7 +86,7 @@ var CubePositions2 = [
   -1, -1, -1,
 
   // Inner Left
-  -0.5, -0.5, 1,   //*16
+  -0.5, -0.5, 1,   //*16 * 3
   -0.5, 0.5, 1,    //*17
   -0.5, 0.5, -1,   //*18
   -0.5, -0.5, -1,  //*19
@@ -152,7 +134,7 @@ var CubePositions2 = [
   -0.5, -0.5, 1, //47
 ];
 
-var CubeNormals2 = [
+var WallNormals = [
   // Top face
   0, 1, 0,
   0, 1, 0,
@@ -226,7 +208,7 @@ var CubeNormals2 = [
   0, 0, 1,
 ];
 
-var CubeIndices2 = [
+var WallIndices = [
    0, 1, 2, 0, 2, 3,        // top
    4, 5, 6, 4, 6, 7,        // bottom
    8, 9, 10, 8, 10, 11,     // right

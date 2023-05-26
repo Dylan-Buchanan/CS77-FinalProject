@@ -22,7 +22,7 @@ var BlackFragmentSource = `
 
     void main() {
 
-        if (Type == 1.0) {
+        if (Type == 1.0) {  
             float col;
             float col2;
             if (p.z <= 0.0) {
@@ -53,9 +53,14 @@ var BlackFragmentSource = `
 
 var speed = 0.05;
 var tallest = 4.0;
-var shortest = 0.41;
-var skinniest = 0.41;
+var shortest = 0.5;
+var skinniest = 0.5;
 var widest = 6.0;
+var maxWallWidth = 3.0;
+var maxWallHeight = 1.5;
+var newWall = true;
+var level = 1;
+
 
 
 var Game = function(gl)
@@ -63,7 +68,11 @@ var Game = function(gl)
     this.pitch = 10.;
     this.yaw = 0;
 
-    this.wall = new ShadedTriangleMesh(gl, CubePositions2, CubeNormals2, CubeIndices2, BlackVertexSource, BlackFragmentSource);
+    if (newWall) {
+        randomWall(WallPositions, skinniest, shortest);
+        newWall = false;  
+    }
+    this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
     this.cubeMesh = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     this.road = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     gl.enable(gl.DEPTH_TEST);
@@ -260,7 +269,7 @@ Game.prototype.render = function(gl, w, h)
     gl.disable(gl.DEPTH_TEST);
     
     var projection = Matrix.perspective(45, w/h, 0.1, 100);    
-    var view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, cameraY, 0)).inverse();
+    var view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, cameraY, 0.)).inverse();
     var wallModel = Matrix.translate(0, 1., -5).multiply(Matrix.scale(3., 1.5, 1.));
     var roadModel = Matrix.translate(0, 0, 0).multiply(Matrix.scale(1.5, 1, 20));
 
@@ -286,7 +295,6 @@ Game.prototype.render = function(gl, w, h)
         // Change camera perspective on jump
         cameraY = Math.max(1.5, height + 1.5);
         if (height == minHeight) {
-            console.log("Here");
             jumping = false;
         }
         // cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
@@ -304,6 +312,7 @@ Game.prototype.render = function(gl, w, h)
         widened = false;
     }
 
+    this.wall.render(gl, wallModel, view, projection, 1.0);
     if (cubeModel) {
         this.road.render(gl, roadModel, view, projection, 2.0);
         this.cubeMesh.render(gl, cubeModel, view, projection, 0.0);
@@ -314,5 +323,4 @@ Game.prototype.render = function(gl, w, h)
         this.cubeMesh.render(gl, cubeModel, view, projection, 0.0);
         
     }
-    // this.wall.render(gl, wallModel, view, projection);
 }
