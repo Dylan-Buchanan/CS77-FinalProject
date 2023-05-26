@@ -269,36 +269,16 @@ Game.prototype.render = function(gl, w, h)
     
     // becomes true when space bar is released
     if (spaceHasBeenPressed) {
-    3
+
         var currentTime = new Date().getTime();
         var elapsedTime = (currentTime - spacePressEndTime) / 10;
 
-        if (height >= maxHeight)
-        {
-            velocity = Math.abs(velocity);
-            fall = true;
-            bouncing = true;
-        }
-        else if (height <= minHeight && fall) {
-            height = minHeight;
-            velocity = 0;
-            fall = false;
-            bouncing = false;
-            jumpInProgress = false;
-            canJump = true;
-        }
-        else if (! fall); {
-            velocity = velocity - gravity * elapsedTime;
-
-        }
-
+        velocity = velocity - gravity * elapsedTime;
         height += velocity;
         height = Math.max(minHeight, height);
         height = Math.min(maxHeight, height);
         cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
 
-        jumpInProgress = true;
-       
     }
 
     
