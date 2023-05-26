@@ -155,12 +155,13 @@ function checkKeyStates() {
         // console.log("space bar duration", spaceBarDuration);
     }
 
-    // Check the state of all keys
-    if (w) {
-      // Perform action when W is pressed
-        height += speed;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
-    }
+    // // Check the state of all keys
+    // if (w) {
+    //   // Perform action when W is pressed
+    //     height += speed;
+    //     cameraY = Math.max(1.5, height + 1.5);
+    //     cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+    // }
     
     if (a) {
       // Perform action when A is pressed
@@ -171,7 +172,8 @@ function checkKeyStates() {
     
     if (s) {
       // Perform action when S is pressed
-        height = Math.max(height -= speed, -1.5);
+        height = Math.max(height -= speed, 0);
+        cameraY = Math.max(height + 1.5, 1.5);
         cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
     
@@ -245,8 +247,10 @@ function updateScore(cubePosition, wallPosition, wallSize) {
 var maxHeight = 2;
 var minHeight = 0;
 var velocity = 0;
-var gravity = .0001;
+var gravity = .00008;
 var jumping = false;
+
+var cameraY = 1.5;
 
 Game.prototype.render = function(gl, w, h)
 {
@@ -256,7 +260,7 @@ Game.prototype.render = function(gl, w, h)
     gl.disable(gl.DEPTH_TEST);
     
     var projection = Matrix.perspective(45, w/h, 0.1, 100);    
-    var view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, 1.5, 0)).inverse();
+    var view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, cameraY, 0)).inverse();
     var wallModel = Matrix.translate(0, 1., -5).multiply(Matrix.scale(3., 1.5, 1.));
     var roadModel = Matrix.translate(0, 0, 0).multiply(Matrix.scale(1.5, 1, 20));
 
@@ -271,12 +275,6 @@ Game.prototype.render = function(gl, w, h)
         jumping = true;
     }
     
-    // else if (! jumping) {
-    //     console.log("here now");
-    //     height = Math.max(minHeight, height);
-
-    // }
-
     if (jumping) {
         var currentTime = new Date().getTime();
         var elapsedTime = (currentTime - spacePressEndTime) / 10;
@@ -284,18 +282,16 @@ Game.prototype.render = function(gl, w, h)
         height += velocity;
         height = Math.max(minHeight, height);
         height = Math.min(maxHeight, height);
+        console.log
+        // Change camera perspective on jump
+        cameraY = Math.max(1.5, height + 1.5);
         if (height == minHeight) {
             console.log("Here");
             jumping = false;
         }
         // cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
     }
-
     cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
-
-
-    
-    
 
     // check for the key states constantly for smooth movement
     checkKeyStates();
