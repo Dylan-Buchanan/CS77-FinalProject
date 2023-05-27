@@ -46,7 +46,7 @@ var BlackFragmentSource = `
     }
 `;
 
-var speed = 0.01;
+var speed = 0.05;
 var tallest = 4.0;
 var shortest = 0.5;
 var skinniest = 0.5;
@@ -55,6 +55,9 @@ var maxWallWidth = 3.0;
 var maxWallHeight = 1.5;
 var newWall = true;
 var level = 1;
+var wallDistance = -8.;
+var wallSpeed = 0.05;
+var cubeScale = 0.5;
 
 
 
@@ -63,10 +66,7 @@ var Game = function(gl)
     this.pitch = 10.;
     this.yaw = 0;
 
-    if (newWall) {
-        randomWall(WallPositions, skinniest, shortest);
-        newWall = false;  
-    }
+    randomWall(WallPositions, skinniest, shortest);
     this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
     this.cubeMesh = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     gl.enable(gl.DEPTH_TEST);
@@ -120,25 +120,25 @@ function checkKeyStates() {
     if (w) {
       // Perform action when W is pressed
         height += speed;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
     }
     
     if (a) {
       // Perform action when A is pressed
         trans -= speed;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
     }
     
     if (s) {
       // Perform action when S is pressed
         height = Math.max(height -= speed, -1.5);
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
     }
     
     if (d) {
       // Perform action when D is pressed
         trans += speed;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
     }
     if (ArrowUp) {
         // Perform action when up is pressed
@@ -146,7 +146,7 @@ function checkKeyStates() {
             changeShape(CubePositions, topCube, speed, true);
         }
         upped = true;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
     }
       
     if (ArrowDown) {
@@ -155,7 +155,7 @@ function checkKeyStates() {
             changeShape(CubePositions, topCube, speed, false);
         }
         downed = true;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
     }
       
     if (ArrowLeft) {
@@ -165,7 +165,7 @@ function checkKeyStates() {
             changeShape(CubePositions, rightCube, speed, true);
         }
         widened = true;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
     }
       
     if (ArrowRight) {
@@ -175,7 +175,7 @@ function checkKeyStates() {
             changeShape(CubePositions, rightCube, speed, false);
         }
         widened = true;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
     }
 
   }
@@ -191,7 +191,17 @@ Game.prototype.render = function(gl, w, h)
     
     var projection = Matrix.perspective(45, w/h, 0.1, 100);    
     var view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(0, 1.5, 0.)).inverse();
-    var wallModel = Matrix.translate(0, 1., -5).multiply(Matrix.scale(3., 1.5, 1.));
+    wallDistance += wallSpeed;
+    if (wallDistance > 0.5) {
+        randomWall(WallPositions, skinniest, shortest);
+        wallDistance = -5.;
+    }
+    if (wallDistance > -1.0 && wallDistance < 1.0) {
+        if (checkCollision(trans, height, cubeScale)) {
+            wallSpeed = 0.0;
+        }
+    }
+    var wallModel = Matrix.translate(0, 1., wallDistance).multiply(Matrix.scale(3., 1.5, 1.));
 
     // check for the key states constantly for smooth movement
     checkKeyStates();
@@ -208,7 +218,7 @@ Game.prototype.render = function(gl, w, h)
         this.cubeMesh.render(gl, cubeModel, view, projection, 0.0);
     }
     else {
-        cubeModel = Matrix.translate(0, 0, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        cubeModel = Matrix.translate(0, 0, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
         this.cubeMesh.render(gl, cubeModel, view, projection, 0.0);
     }
 }

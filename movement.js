@@ -14,6 +14,8 @@ function changeShape(meshpos, pos, amt, dir)
 }
 
 function randomWall(meshpos, cubeMinWidth, cubeMinHeight) {
+    resetWall(meshpos);
+
     var firstSideLR = Math.random();
     var firstSideTB = Math.random();
     var left;
@@ -42,6 +44,44 @@ function randomWall(meshpos, cubeMinWidth, cubeMinHeight) {
     changeShape(meshpos, rightWall, right, true);
     changeShape(meshpos, topWall, top, true);
     changeShape(meshpos, bottomWall, bottom, true);
+}
+
+function resetWall(meshpos) {
+    for (var i = 0; i < leftWall.length; i++) {
+        meshpos[leftWall[i]] = -0.5;
+    }
+
+    for (var i = 0; i < rightWall.length; i++) {
+        meshpos[rightWall[i]] = 0.5;
+    }
+
+    for (var i = 0; i < topWall.length; i++) {
+        meshpos[topWall[i]] = 0.5;
+    }
+
+    for (var i = 0; i < bottomWall.length; i++) {
+        meshpos[bottomWall[i]] = -0.5;
+    }
+}
+
+var checkCollision = function(xChange, yChange, scale) {
+    var ctlx = (CubePositions[15] + xChange) * scale;
+    var ctrx = (CubePositions[18] + xChange) * scale;
+    var cbly = (CubePositions[13] + yChange) * scale;
+    var ctly = (CubePositions[16] + xChange) * scale;
+
+    var wtlx = WallPositions[51] * 3.;
+    var wtrx = WallPositions[63] * 3.;
+    var wbly = WallPositions[49] * 1.5;
+    var wtly = WallPositions[52] * 1.5;
+
+    if (wtlx < ctlx && wtrx > ctrx) {
+        return true;
+    }
+    if (wbly < cbly && wtly > ctly) {
+        return true;
+    }
+    return false;
 }
 
 var rightCube = [
