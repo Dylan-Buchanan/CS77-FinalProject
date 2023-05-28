@@ -20,6 +20,8 @@ ShadedTriangleMesh.prototype.render = function(gl, model, view, projection, type
 
     // 0 = cube, 1 = wall, 2 = road
     gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "Type"), type);
+
+    gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "wallDist"), Math.abs(wallDistance));
     
     // OpenGL setup beyond this point
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexIbo);

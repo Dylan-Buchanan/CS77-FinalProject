@@ -75,10 +75,10 @@ var checkCollision = function(xChange, yChange, scale) {
     var wbly = WallPositions[49] * 1.5;
     var wtly = WallPositions[52] * 1.5;
 
-    if (wtlx < ctlx && wtrx > ctrx) {
+    if (wtlx > ctlx || wtrx < ctrx) {
         return true;
     }
-    if (wbly < cbly && wtly > ctly) {
+    if (wbly > cbly || wtly < ctly) {
         return true;
     }
     return false;
