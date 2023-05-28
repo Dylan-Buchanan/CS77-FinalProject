@@ -56,7 +56,7 @@ var maxWallWidth = 3.0;
 var maxWallHeight = 1.5;
 var level = 1;
 var wallDistance = -12.;
-var wallSpeed = 0.002;
+var wallSpeed = 0.02;
 var cubeScale = 0.5;
 var collision = false;
 
@@ -172,67 +172,66 @@ function checkKeyStates() {
     const { a, s, d, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } = keyStates;
 
     // // Check the state of all keys
-    
-    if (a) {
-      // Perform action when A is pressed
-        trans -= speed;
-        cameraX -= speed;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
-    }
-    
-    if (s) {
-      // Perform action when S is pressed
-        height = Math.max(height -= speed, 0);
-        cameraY = Math.max(height + 1.5, 1.5);
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
-    }
-    
-    if (d) {
-      // Perform action when D is pressed
-        trans += speed;
-        cameraX += speed;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
-    }
-    if (ArrowUp) {
-        // Perform action when up is pressed
-        if (Math.abs(CubePositions[10] - CubePositions[1]) < tallest) {
-            changeShape(CubePositions, topCube, speed, true);
+    if (wallSpeed != 0.0) {
+        if (a) {
+        // Perform action when A is pressed
+            trans -= speed;
+            cameraX -= speed;
+            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
         }
-        upped = true;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
-    }
-      
-    if (ArrowDown) {
-    // Perform action when down is pressed
-        if (Math.abs(CubePositions[10] - CubePositions[1]) > shortest) {
-            changeShape(CubePositions, topCube, speed, false);
+        
+        // if (s) {
+        // // Perform action when S is pressed
+        //     height = Math.max(height -= speed, 0);
+        //     cameraY = Math.max(height + 1.5, 1.5);
+        //     cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+        // }
+        
+        if (d) {
+        // Perform action when D is pressed
+            trans += speed;
+            cameraX += speed;
+            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
         }
-        downed = true;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
-    }
-      
-    if (ArrowLeft) {
-    // Perform action when left is pressed
-        if (Math.abs(CubePositions[3] - CubePositions[0]) < widest) {
-            changeShape(CubePositions, leftCube, speed, false);
-            changeShape(CubePositions, rightCube, speed, true);
+        if (ArrowUp) {
+            // Perform action when up is pressed
+            if (Math.abs(CubePositions[10] - CubePositions[1]) < tallest) {
+                changeShape(CubePositions, topCube, speed, true);
+            }
+            upped = true;
+            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
         }
-        widened = true;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
-    }
-      
-    if (ArrowRight) {
-    // Perform action when right is pressed
-        if (Math.abs(CubePositions[3] - CubePositions[0]) > shortest) {
-            changeShape(CubePositions, leftCube, speed, true);
-            changeShape(CubePositions, rightCube, speed, false);
+        
+        if (ArrowDown) {
+        // Perform action when down is pressed
+            if (Math.abs(CubePositions[10] - CubePositions[1]) > shortest) {
+                changeShape(CubePositions, topCube, speed, false);
+            }
+            downed = true;
+            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
         }
-        widened = true;
-        cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
+        
+        if (ArrowLeft) {
+        // Perform action when left is pressed
+            if (Math.abs(CubePositions[3] - CubePositions[0]) < widest) {
+                changeShape(CubePositions, leftCube, speed, false);
+                changeShape(CubePositions, rightCube, speed, true);
+            }
+            widened = true;
+            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
+        }
+        
+        if (ArrowRight) {
+        // Perform action when right is pressed
+            if (Math.abs(CubePositions[3] - CubePositions[0]) > shortest) {
+                changeShape(CubePositions, leftCube, speed, true);
+                changeShape(CubePositions, rightCube, speed, false);
+            }
+            widened = true;
+            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
+        }
     }
-
-
 }
 
 let score = 0;
@@ -285,7 +284,9 @@ Game.prototype.render = function(gl, w, h)
                 speed = 0.05;
             }
         }
-        view = Matrix.lookAt(pan, 1.5, panDist, 0, 1.5, -5.5, 0, 1, 0);  
+        xView = ((CubePositions[12] + CubePositions[21]) / 2.) + trans;
+        yView = (CubePositions[13] + CubePositions[16]) / 2.;
+        view = Matrix.lookAt(pan, 1.5, panDist, xView, yView, dist - 0.5, 0, 1, 0);  
     }  
     else {
         view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, cameraY, 0.)).inverse();
@@ -315,23 +316,25 @@ Game.prototype.render = function(gl, w, h)
     
     
     // becomes true when space bar is released
-    if (spaceHasBeenPressed && ! jumping) {
-        velocity = Math.min(160, spacePressDuration) / 2000;
-        spaceHasBeenPressed = false;
-        jumping = true;
-    }
-    
-    if (jumping) {
-        var currentTime = new Date().getTime();
-        var elapsedTime = (currentTime - spacePressEndTime) / 10;
-        velocity = velocity - gravity * elapsedTime;
-        height += velocity;
-        height = Math.max(minHeight, height);
-        height = Math.min(maxHeight, height);
-        // Change camera perspective on jump
-        cameraY = Math.max(1.5, height + 1.5);
-        if (height == minHeight) {
-            jumping = false;
+    if (wallSpeed != 0.0) {
+        if (spaceHasBeenPressed && ! jumping) {
+            velocity = Math.min(160, spacePressDuration) / 2000;
+            spaceHasBeenPressed = false;
+            jumping = true;
+        }
+        
+        if (jumping) {
+            var currentTime = new Date().getTime();
+            var elapsedTime = (currentTime - spacePressEndTime) / 10;
+            velocity = velocity - gravity * elapsedTime;
+            height += velocity;
+            height = Math.max(minHeight, height);
+            height = Math.min(maxHeight, height);
+            // Change camera perspective on jump
+            cameraY = Math.max(1.5, height + 1.5);
+            if (height == minHeight) {
+                jumping = false;
+            }
         }
     }
     cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
