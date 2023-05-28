@@ -32,6 +32,10 @@ var BlackVertexSource = `
             Color = vec3(1.0, 1.0, 0.0);
         }
 
+        else if (Type == 3.0) {
+            Color = vec3(0.0, 0.0, 1.0);
+        }
+
         else {
             Color = vec3(0.0, 0.0, 0.0);
         }
@@ -56,7 +60,7 @@ var maxWallWidth = 3.0;
 var maxWallHeight = 1.5;
 var level = 1;
 var wallDistance = -12.;
-var wallSpeed = 0.02;
+var wallSpeed = 0.002;
 var cubeScale = 0.5;
 var collision = false;
 
@@ -175,24 +179,20 @@ function checkKeyStates() {
     if (wallSpeed != 0.0) {
         if (a) {
         // Perform action when A is pressed
-            trans -= speed;
-            cameraX -= speed;
-            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
-            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
+            if (checkCanMove(trans, 3., cubeScale, speed, 0)) {
+                trans -= speed;
+                cameraX -= speed;
+                cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
+            }
         }
-        
-        // if (s) {
-        // // Perform action when S is pressed
-        //     height = Math.max(height -= speed, 0);
-        //     cameraY = Math.max(height + 1.5, 1.5);
-        //     cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
-        // }
         
         if (d) {
         // Perform action when D is pressed
-            trans += speed;
-            cameraX += speed;
-            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+            if (checkCanMove(trans, 3., cubeScale, speed, 1)) {
+                trans += speed;
+                cameraX += speed;
+                cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+            }
         }
         if (ArrowUp) {
             // Perform action when up is pressed
@@ -214,12 +214,14 @@ function checkKeyStates() {
         
         if (ArrowLeft) {
         // Perform action when left is pressed
-            if (Math.abs(CubePositions[3] - CubePositions[0]) < widest) {
-                changeShape(CubePositions, leftCube, speed, false);
-                changeShape(CubePositions, rightCube, speed, true);
+            if (checkCanMove(trans, 3., cubeScale, speed, 2)) {
+                if (Math.abs(CubePositions[3] - CubePositions[0]) < widest) {
+                    changeShape(CubePositions, leftCube, speed, false);
+                    changeShape(CubePositions, rightCube, speed, true);
+                }
+                widened = true;
+                cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
             }
-            widened = true;
-            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
         }
         
         if (ArrowRight) {
@@ -255,7 +257,7 @@ var velocity = 0;
 var gravity = .00008;
 var jumping = false;
 
-var cameraY = 1.5;
+var cameraY = 1.;
 
 var pan = 10.;
 
@@ -292,8 +294,8 @@ Game.prototype.render = function(gl, w, h)
         view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, cameraY, 0.)).inverse();
     }
     var wallModel = Matrix.translate(0, 1., wallDistance).multiply(Matrix.scale(3., 1.5, 1.));
-    var roadModel = Matrix.translate(0, -1., 0.).multiply(Matrix.scale(3., 1., 20.));
-    var leftTunnel = Matrix.translate(-4., 1., 0.).multiply(Matrix.scale(1., 3., 20.));
+    var roadModel = Matrix.translate(0, -1.5, 0.).multiply(Matrix.scale(3., 1., 20.));
+    var leftTunnel = Matrix.translate(-4., 0., 0.).multiply(Matrix.scale(1., 3., 20.));
     var rightTunnel = Matrix.translate(4., 1., 0.).multiply(Matrix.scale(1., 3., 20.));
 
     if (wallSpeed != 0.0) {
@@ -350,9 +352,9 @@ Game.prototype.render = function(gl, w, h)
         widened = false;
     }
 
+    this.tunnel1.render(gl, leftTunnel, view, projection, 3.0);
+    this.tunnel2.render(gl, rightTunnel, view, projection, 3.0);
     this.road.render(gl, roadModel, view, projection, 2.0);
-    this.tunnel1.render(gl, leftTunnel, view, projection, 2.0);
-    this.tunnel2.render(gl, rightTunnel, view, projection, 2.0);
     this.wall.render(gl, wallModel, view, projection, 1.0);
     if (cubeModel) {
         this.cubeMesh.render(gl, cubeModel, view, projection, 0.0);

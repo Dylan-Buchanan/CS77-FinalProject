@@ -84,6 +84,22 @@ var checkCollision = function(xChange, yChange, scale) {
     return false;
 }
 
+var checkCanMove = function(xChange, maxX, scale, speed, input) {
+    // 0 = left, 1 = right, 2 = grow
+    var xDist = (Math.abs(CubePositions[12]) + Math.abs(CubePositions[21])) * scale / 2.;
+    if (input == 0 || input == 2) {
+        if (((CubePositions[12] + xChange - speed)) <= -1 * maxX - xDist) {
+            return false;
+        }
+    }
+    else {
+        if (((CubePositions[21] + xChange + speed)) >= maxX + xDist) {
+            return false;
+        }
+    }
+    return true;
+}
+
 var rightCube = [
     3, 6, 18, 21, 30,
     33, 39, 42, 48, 51,
