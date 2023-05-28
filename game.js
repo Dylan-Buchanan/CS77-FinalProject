@@ -37,6 +37,72 @@ var BlackVertexSource = `
         }
     }
 `;
+
+// var BlackVertexSource = `
+//     uniform mat4 ModelViewProjection;
+    
+//     attribute vec3 Position;
+
+//     uniform float Type;
+
+//     uniform float wallDist;
+
+//     varying vec3 Color;
+    
+//     void main() {
+//         vec4 position = vec4(Position.x, Position.y, Position.z, 1.0);
+//         gl_Position = ModelViewProjection * position;
+//         vec3 p = vec3(gl_Position);
+        
+//         if (Type == 1.0) {  
+//             float depth = clamp(p.z / wallDist, 0.0, 1.0);
+//             Color = vec3(depth, 0.0, 0.0);
+//         }
+//         else if (Type == 2.0) {
+//             float depth = clamp(p.z / wallDist, 0.0, 1.0);
+//             Color = vec3(1.0, depth, 0.0);
+//         }
+//         else {
+//             Color = vec3(0.0, 0.0, 0.0);
+//         }
+//     }
+// `;
+
+// var BlackVertexSource = `
+//     uniform mat4 ModelViewProjection;
+    
+//     attribute vec3 Position;
+//     varying vec3 Color;
+
+//     uniform float Type;
+//     uniform float wallDist;
+    
+//     void main() {
+//         vec4 position = vec4(Position.x, Position.y, Position.z, 1.0);
+//         gl_Position = ModelViewProjection * position;
+        
+//         float distance = length(vec3(gl_Position));
+        
+//         if (Type == 1.0) {  
+//             float col = 1.0 - (distance / 10.0); 
+//             col = clamp(col, 0.0, 1.0);
+//             Color = vec3(1.0, 0., 0.);
+//             Color = mix(Color, vec3(col), 0.5); 
+//         }
+       
+//         else if (Type == 2.0) {
+//             float depth = clamp(gl_Position.z / 5., 0.0, 1.0);
+//             Color = vec3(1.0, depth, 0.0);
+//         }
+
+//         else {
+//             float depth = clamp(gl_Position.z / 5., 0.0, 1.0);
+//             Color = vec3(0.0, 0.0, 1.0 - depth);
+//         }
+//     }
+// `;
+
+
 var BlackFragmentSource = `
     precision highp float;
 
@@ -46,6 +112,8 @@ var BlackFragmentSource = `
         gl_FragColor = vec4(Color, 1.0);
     }
 `;
+
+
 
 var speed = 0.05;
 var tallest = 4.0;
@@ -249,13 +317,14 @@ function updateScore(cubePosition, wallPosition, wallSize) {
   }
 }
 
-var maxHeight = 2;
+var maxHeight = 3;
 var minHeight = 0;
 var velocity = 0;
-var gravity = .00008;
+var gravity = .00004;
 var jumping = false;
+var gravityHalved = false;
 
-var cameraY = 1.5;
+var cameraY = .5;
 
 var pan = 10.;
 
@@ -292,7 +361,7 @@ Game.prototype.render = function(gl, w, h)
         view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, cameraY, 0.)).inverse();
     }
     var wallModel = Matrix.translate(0, 1., wallDistance).multiply(Matrix.scale(3., 1.5, 1.));
-    var roadModel = Matrix.translate(0, -1., 0.).multiply(Matrix.scale(3., 1., 20.));
+    var roadModel = Matrix.translate(0, -1.5, 0.).multiply(Matrix.scale(3., 1., 20.));
     var leftTunnel = Matrix.translate(-4., 1., 0.).multiply(Matrix.scale(1., 3., 20.));
     var rightTunnel = Matrix.translate(4., 1., 0.).multiply(Matrix.scale(1., 3., 20.));
 
@@ -326,13 +395,23 @@ Game.prototype.render = function(gl, w, h)
         if (jumping) {
             var currentTime = new Date().getTime();
             var elapsedTime = (currentTime - spacePressEndTime) / 10;
+            if (0 > velocity  && ! gravityHalved) {
+                gravity *= .1;
+                gravityHalved = true;
+            }
             velocity = velocity - gravity * elapsedTime;
             height += velocity;
             height = Math.max(minHeight, height);
             height = Math.min(maxHeight, height);
+            if (height >= maxHeight) {
+                velocity = 0;
+            }
             // Change camera perspective on jump
-            cameraY = Math.max(1.5, height + 1.5);
+            cameraY = Math.max(.5, height + .5);
             if (height == minHeight) {
+                velocity = 0;
+                gravity *= 10;
+                gravityHalved = false;
                 jumping = false;
             }
         }
@@ -350,9 +429,9 @@ Game.prototype.render = function(gl, w, h)
         widened = false;
     }
 
-    this.road.render(gl, roadModel, view, projection, 2.0);
     this.tunnel1.render(gl, leftTunnel, view, projection, 2.0);
     this.tunnel2.render(gl, rightTunnel, view, projection, 2.0);
+    this.road.render(gl, roadModel, view, projection, 2.0);
     this.wall.render(gl, wallModel, view, projection, 1.0);
     if (cubeModel) {
         this.cubeMesh.render(gl, cubeModel, view, projection, 0.0);
