@@ -316,7 +316,7 @@ function checkKeyStates(gl) {
     }
 }
 
-function updateScore(cubePosition, wallPosition, wallSize) {
+function updateScore() {
   var cubeVolume = cubeScale * 2.; // Assuming the cube has a volume of 1 in the z direction
 
   // Check if the cube collides with the wall
@@ -381,7 +381,7 @@ Game.prototype.render = function(gl, w, h)
     if (!collision) {
         wallDistance += wallSpeed;
         if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5)) {
-            if (checkCollision(trans, height, cubeScale)) {
+            if (checkCollision(trans, height, cubeScale, maxWallWidth, maxWallHeight)) {
                 wallSpeed = 0.0;
                 collision = true;
             }
