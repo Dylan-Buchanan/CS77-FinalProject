@@ -90,8 +90,9 @@ let spacePressStartTime = null;
 let spacePressDuration = 0;
 let spacePressEndTime = 0;
 var velocity = 0; // How the y-value of the cube is changing
-var gravity = .00008; // How fast the cube falls
-var maxHeight = 2.;
+var gravity = .00004; // How fast the cube falls
+var gravityHalved = false;
+var maxHeight = 4.;
 const keyStates = {
     w: false,
     a: false,
@@ -263,7 +264,7 @@ function checkKeyStates() {
 }
 
 function updateScore(cubePosition, wallPosition, wallSize) {
-  const cubeVolume = cubeScale * 2.; // Assuming the cube has a volume of 1 in the z direction
+  var cubeVolume = cubeScale * 2.; // Assuming the cube has a volume of 1 in the z direction
 
   // Check if the cube collides with the wall
   if (collision) {
@@ -276,9 +277,12 @@ function updateScore(cubePosition, wallPosition, wallSize) {
         var scoreboardElement = document.getElementById('level');
         scoreboardElement.textContent = level;
     }
-    score += cubeVolume; // Add cube's volume to the score
+    cubeVolume = Math.floor((CubePositions[21] - CubePositions[12]) * (CubePositions[16] - CubePositions[13]));
+    score += cubeVolume;
+    // score += cubeVolume; // Add cube's volume to the score
     var scoreboardElement = document.getElementById('score');
     scoreboardElement.textContent = score;
+    
     return; // Return null to indicate no collision occurred
   }
 }
@@ -350,18 +354,10 @@ Game.prototype.render = function(gl, w, h)
         if (jumping) {
             var currentTime = new Date().getTime();
             var elapsedTime = (currentTime - spacePressEndTime) / 10;
-            velocity = velocity - gravity * elapsedTime;
-            height += velocity;
-            height = Math.max(0., height);
-            height = Math.min(maxHeight, height);
             if (0 > velocity  && ! gravityHalved) {
                 gravity *= .1;
                 gravityHalved = true;
             }
-
-
-
-
 
 
             if (wallDistance > -6. && wallDistance < -3. && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
@@ -375,15 +371,18 @@ Game.prototype.render = function(gl, w, h)
             else {
                 velocity = velocity - gravity * elapsedTime;
                 height += velocity;
-                height = Math.max(minHeight, height);
+                height = Math.max(0, height);
                 height = Math.min(maxHeight, height);
             }
             if (height >= maxHeight) {
                 velocity = 0;
             }
             // Change camera perspective on jump
-            cameraY = Math.max(1.5, height + 1.5);
+            cameraY = Math.max(.5, height + .5);
             if (height == 0.) {
+                velocity = 0;
+                gravity *= 10;
+                gravityHalved = false;
                 jumping = false;
             }
         }
