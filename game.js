@@ -143,7 +143,7 @@ var Game = function(gl)
     gl.enable(gl.DEPTH_TEST);
 }
 
-function restartGame(gl) {
+function restartGame() {
     resetCube();
     randomWall(WallPositions, skinniest, shortest);
     trans = 0; // Cube X-change
@@ -198,14 +198,14 @@ document.addEventListener('keyup', (event) => {
         if (spacePressed) {
             if (ableToLoadJump) {
                 spaceHasBeenPressed = true;
+                const end = Date.now()
+                spacePressEndTime = end;
+                spacePressDuration = spacePressEndTime - spacePressStartTime;
             }
             else {
                 spaceHasBeenPressed = false;
             }
             spacePressed = false;
-            const end = Date.now()
-            spacePressEndTime = end;
-            spacePressDuration = spacePressEndTime - spacePressStartTime;
             space = false;
         }
     }
@@ -249,7 +249,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 // Function to check key states and perform actions
-function checkKeyStates(gl) {
+function checkKeyStates() {
     const { a, d, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Enter } = keyStates;
 
     // // Check the state of all keys
@@ -312,13 +312,11 @@ function checkKeyStates(gl) {
         }
     }
     if (Enter) {
-        restartGame(gl);
+        restartGame();
     }
 }
 
 function updateScore() {
-  var cubeVolume = cubeScale * 2.; // Assuming the cube has a volume of 1 in the z direction
-
   // Check if the cube collides with the wall
   if (collision) {
     return; // Perform Game Over Functions
@@ -330,8 +328,9 @@ function updateScore() {
         var scoreboardElement = document.getElementById('level');
         scoreboardElement.textContent = level;
     }
-    cubeVolume = Math.floor((CubePositions[21] - CubePositions[12]) * (CubePositions[16] - CubePositions[13]));
-    score += cubeVolume;
+    var cubeVolume = ((CubePositions[21] - CubePositions[12]) * cubeScale) * ((CubePositions[16] - CubePositions[13]) * cubeScale);
+    var holeVolume = ((WallPositions[63] - WallPositions[51]) * maxWallWidth) * ((WallPositions[52] - WallPositions[49]) * maxWallHeight);
+    score += Math.ceil(cubeVolume / holeVolume * 100);
     // score += cubeVolume; // Add cube's volume to the score
     var scoreboardElement = document.getElementById('score');
     scoreboardElement.textContent = score;
@@ -397,7 +396,7 @@ Game.prototype.render = function(gl, w, h)
     // becomes true when space bar is released
     if (!collision) {
         if (spaceHasBeenPressed && !jumping) {
-            velocity = Math.min(160, spacePressDuration) / 4000;
+            velocity = Math.min(160, spacePressDuration / 2) / 4000;
             spaceHasBeenPressed = false;
             jumping = true;
         }
@@ -407,12 +406,11 @@ Game.prototype.render = function(gl, w, h)
             var elapsedTime = (currentTime - spacePressEndTime) / 10;
             if (0 > velocity  && ! lowerGrav) {
                 gravity *= lowerGravVal;
-             lowerGrav = true;
+                lowerGrav = true;
             }
 
 
             if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5) && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
-
                 if ((dist - 1.48) < wallDistance && wallDistance < (dist - 1.4) && !scored) {
                     // Update the current score if no collision but shape passes through
                     updateScore();
@@ -428,11 +426,11 @@ Game.prototype.render = function(gl, w, h)
                 velocity = 0;
             }
             // Change camera perspective on jump
-            cameraY = Math.max(cubeScale, height + cubeScale);
+            cameraY = Math.max(2. * cubeScale, height + cubeScale);
             if (height == 0.) {
                 velocity = 0;
                 gravity *= (1 / lowerGravVal);
-             lowerGrav = false;
+                lowerGrav = false;
                 jumping = false;
             }
         }
@@ -456,7 +454,7 @@ Game.prototype.render = function(gl, w, h)
     }
 
     // check for the key states constantly for smooth movement
-    checkKeyStates(gl);
+    checkKeyStates();
 
     if (reset) {
         this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
