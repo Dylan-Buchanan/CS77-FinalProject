@@ -373,7 +373,7 @@ Game.prototype.render = function(gl, w, h)
             jumping = true;
             velocity = Math.min(160, spacePressDuration) / 2000;
             spaceHasBeenPressed = false;
-            ableToLoadJump = false;
+            // ableToLoadJump = false;
         }
         
         if (jumping) {
@@ -403,13 +403,13 @@ Game.prototype.render = function(gl, w, h)
                 velocity = 0;
             }
             // Change camera perspective on jump
-            cameraY = Math.max(1., height + .5);
+            cameraY = Math.max(.5, height + .5);
             if (height == cubeScale) {
                 velocity = 0;
                 gravity *= 10;
                 gravityHalved = false;
                 jumping = false;
-                ableToLoadJump = true;
+                // ableToLoadJump = true;
             }
         }
     }
