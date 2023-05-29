@@ -14,7 +14,7 @@ function changeShape(meshpos, pos, amt, dir)
 }
 
 function randomWall(meshpos, cubeMinWidth, cubeMinHeight) {
-    resetWall(meshpos);
+    resetWall();
     cubeMinWidth = cubeMinWidth;
     cubeMinHeight = cubeMinHeight;
 
@@ -32,21 +32,21 @@ function randomWall(meshpos, cubeMinWidth, cubeMinHeight) {
     changeShape(meshpos, bottomWall, bottom, true);
 }
 
-function resetWall(meshpos) {
+function resetWall() {
     for (var i = 0; i < leftWall.length; i++) {
-        meshpos[leftWall[i]] = -0.5;
+        WallPositions[leftWall[i]] = -0.5;
     }
 
     for (var i = 0; i < rightWall.length; i++) {
-        meshpos[rightWall[i]] = 0.5;
+        WallPositions[rightWall[i]] = 0.5;
     }
 
     for (var i = 0; i < topWall.length; i++) {
-        meshpos[topWall[i]] = 0.5;
+        WallPositions[topWall[i]] = 0.5;
     }
 
     for (var i = 0; i < bottomWall.length; i++) {
-        meshpos[bottomWall[i]] = -0.5;
+        WallPositions[bottomWall[i]] = -0.5;
     }
 }
 
