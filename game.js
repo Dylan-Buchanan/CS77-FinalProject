@@ -91,7 +91,8 @@ let spacePressDuration = 0;
 let spacePressEndTime = 0;
 var velocity = 0; // How the y-value of the cube is changing
 var gravity = .00008; // How fast the cube falls
-var maxHeight = 2.;
+var gravityHalved = false;
+var maxHeight = 3;
 const keyStates = {
     w: false,
     a: false,
@@ -117,7 +118,7 @@ var score = 0;
 
 // Camera variables
 var cameraX = 0.;
-var cameraY = 1.;
+var cameraY = 1.5;
 var pan = 10.;
 /////////////////////////////////////////////////
 
@@ -155,7 +156,6 @@ document.addEventListener('keyup', (event) => {
             spacePressEndTime = end;
             spacePressDuration = spacePressEndTime - spacePressStartTime;
             space = false;
-            console.log("Space bar press duration:", spacePressDuration, "ms");
         }
     }
 
@@ -199,7 +199,7 @@ document.addEventListener('keydown', (event) => {
 
 // Function to check key states and perform actions
 function checkKeyStates() {
-    const { a, s, d, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } = keyStates;
+    const { a, d, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Enter } = keyStates;
 
     // // Check the state of all keys
     if (!collision) {
@@ -259,6 +259,10 @@ function checkKeyStates() {
             widened = true;
             cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
         }
+
+        if (Enter) {
+            wallSpeed = 0.0;
+        }
     }
 }
 
@@ -276,6 +280,7 @@ function updateScore(cubePosition, wallPosition, wallSize) {
         var scoreboardElement = document.getElementById('level');
         scoreboardElement.textContent = level;
     }
+    cubeVolume = Math.floor((CubePositions[21] - CubePositions[12]) * (CubePositions[16] - CubePositions[13]));
     score += cubeVolume; // Add cube's volume to the score
     var scoreboardElement = document.getElementById('score');
     scoreboardElement.textContent = score;
@@ -340,7 +345,7 @@ Game.prototype.render = function(gl, w, h)
     
     
     // becomes true when space bar is released
-    if (wallSpeed != 0.0) {
+    if (!collision) {
         if (spaceHasBeenPressed && ! jumping) {
             velocity = Math.min(160, spacePressDuration) / 2000;
             spaceHasBeenPressed = false;
@@ -350,40 +355,33 @@ Game.prototype.render = function(gl, w, h)
         if (jumping) {
             var currentTime = new Date().getTime();
             var elapsedTime = (currentTime - spacePressEndTime) / 10;
-            velocity = velocity - gravity * elapsedTime;
-            height += velocity;
-            height = Math.max(0., height);
-            height = Math.min(maxHeight, height);
             if (0 > velocity  && ! gravityHalved) {
                 gravity *= .1;
                 gravityHalved = true;
             }
-
-
-
-
-
 
             if (wallDistance > -6. && wallDistance < -3. && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
 
                 if (-5.98 < wallDistance && wallDistance < -5.90) {
                     updateScore();
                     // Update the current score if no collision but shape passes through
-                    console.log("Score:", score);
                 }
             }
             else {
                 velocity = velocity - gravity * elapsedTime;
                 height += velocity;
-                height = Math.max(minHeight, height);
+                height = Math.max(0.0, height);
                 height = Math.min(maxHeight, height);
             }
             if (height >= maxHeight) {
                 velocity = 0;
             }
             // Change camera perspective on jump
-            cameraY = Math.max(1.5, height + 1.5);
+            cameraY = Math.max(.5, height + 0.5);
             if (height == 0.) {
+                velocity = 0;
+                gravity *= 10;
+                gravityHalved = false;
                 jumping = false;
             }
         }
@@ -393,7 +391,6 @@ Game.prototype.render = function(gl, w, h)
     if (wallSpeed != 0.0) {
         wallDistance += wallSpeed;
         if (wallDistance > -6.0 && wallDistance < -3.0) {
-            console.log(trans, height, cubeScale);
             if (checkCollision(trans, height, cubeScale)) {
                 wallSpeed = 0.0;
                 collision = true;
