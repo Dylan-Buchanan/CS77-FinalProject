@@ -8,6 +8,8 @@ var BlackVertexSource = `
     uniform float wallDist;
 
     varying vec3 Color;
+
+    varying float depthValue;
     
     void main() {
         vec4 position = vec4(Position.x, Position.y, Position.z, 1.0);
@@ -48,18 +50,10 @@ var BlackFragmentSource = `
 
     uniform float Type;
 
-    void main() {
-        float prevC = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
-        float newC = Color.x + Color.y + Color.z;
+    varying float depthValue;
 
-        if (Type != 0.0) {
-            if (newC > prevC) {
-                gl_FragColor = vec4(Color, 1.0);
-            }
-        }
-        else {
-            gl_FragColor = vec4(Color, 1.0);
-        }
+    void main() {
+        gl_FragColor = vec4(Color, 1.0);
     }
 `;
 //////////  Global variables  //////////
@@ -229,7 +223,6 @@ document.addEventListener('keydown', (event) => {
           const start = Date.now();
           spacePressStartTime = start;
         }
-        // var space1 = "space";
         space = true;
         if (! jumping) {
             ableToLoadJump = true;
@@ -345,7 +338,7 @@ Game.prototype.render = function(gl, w, h)
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    gl.disable(gl.DEPTH_TEST);
+    // gl.disable(gl.DEPTH_TEST);
     
     var projection = Matrix.perspective(45, w/h, 0.1, 100);
     var view;
@@ -385,11 +378,13 @@ Game.prototype.render = function(gl, w, h)
                 collision = true;
             }
         }
-        else if (wallDistance > (dist + 2.5) && !collision) {
-            randomWall(WallPositions, skinniest, shortest);
-            this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
-            wallDistance = startingWallDistance;
-        }
+    }
+
+    if (wallDistance > (dist + 2.5) && !collision) {
+        randomWall(WallPositions, skinniest, shortest);
+        this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
+        wallDistance = startingWallDistance;
+        scored = false;
     }
 
     // The total height that the cube will reach with velocity
@@ -411,7 +406,7 @@ Game.prototype.render = function(gl, w, h)
 
 
             if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5) && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
-                if ((dist - 1.48) < wallDistance && wallDistance < (dist - 1.4) && !scored) {
+                if ((dist - 1.48) < wallDistance && !scored) {
                     // Update the current score if no collision but shape passes through
                     updateScore();
                 }
@@ -426,8 +421,8 @@ Game.prototype.render = function(gl, w, h)
                 velocity = 0;
             }
             // Change camera perspective on jump
-            cameraY = Math.max(2. * cubeScale, height + cubeScale);
-            if (height == 0.) {
+            cameraY = Math.max(cubeScale, height + cubeScale);
+            if (height == cubeScale) {
                 velocity = 0;
                 gravity *= (1 / lowerGravVal);
                 lowerGrav = false;
@@ -445,12 +440,13 @@ Game.prototype.render = function(gl, w, h)
                 collision = true;
             }
         }
-        else if (wallDistance > (dist + 2.5) && !collision) {
-            randomWall(WallPositions, skinniest, shortest);
-            this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
-            wallDistance = startingWallDistance;
-            scored = false;
-        }
+    }
+
+    if (wallDistance > (dist + 2.5) && !collision) {
+        randomWall(WallPositions, skinniest, shortest);
+        this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
+        wallDistance = startingWallDistance;
+        scored = false;
     }
 
     // check for the key states constantly for smooth movement
