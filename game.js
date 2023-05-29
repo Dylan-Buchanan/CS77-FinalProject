@@ -112,22 +112,34 @@ var BlackFragmentSource = `
 
     varying vec3 Color;
 
+    uniform float Type;
+
     void main() {
-        gl_FragColor = vec4(Color, 1.0);
+        float prevC = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
+        float newC = Color.x + Color.y + Color.z;
+
+        if (Type != 0.0) {
+            if (newC > prevC) {
+                gl_FragColor = vec4(Color, 1.0);
+            }
+        }
+        else {
+            gl_FragColor = vec4(Color, 1.0);
+        }
     }
 `;
 
 
 
 var speed = 0.05;
-var tallest = 4.0;
+var tallest = 2.0;
 var shortest = 0.5;
 var skinniest = 0.5;
-var widest = 6.0;
+var widest = 3.0;
 var maxWallWidth = 3.0;
 var maxWallHeight = 1.5;
 var level = 1;
-var wallDistance = -12.;
+var wallDistance = -15.;
 var wallSpeed = 0.02;
 var cubeScale = 0.5;
 var collision = false;
@@ -153,7 +165,7 @@ var Game = function(gl)
 var dist = -4.5;
 var cubeModel;
 var trans = 0;
-var height = 0.;
+var height = 0.5;
 
 var upped = false;
 var downed = false;
@@ -264,7 +276,7 @@ function checkKeyStates() {
         }
         if (ArrowUp) {
             // Perform action when up is pressed
-            if (Math.abs(CubePositions[10] - CubePositions[1]) < tallest) {
+            if (Math.abs((CubePositions[10] - CubePositions[1]) * cubeScale) < tallest) {
                 changeShape(CubePositions, topCube, speed, true);
             }
             upped = true;
@@ -273,7 +285,7 @@ function checkKeyStates() {
         
         if (ArrowDown) {
         // Perform action when down is pressed
-            if (Math.abs(CubePositions[10] - CubePositions[1]) > shortest) {
+            if ((Math.abs(CubePositions[10] - CubePositions[1]) * cubeScale) > shortest) {
                 changeShape(CubePositions, topCube, speed, false);
             }
             downed = true;
@@ -283,7 +295,7 @@ function checkKeyStates() {
         if (ArrowLeft) {
         // Perform action when left is pressed
             if (checkCanMove(trans, 3., cubeScale, speed, 2)) {
-                if (Math.abs(CubePositions[3] - CubePositions[0]) < widest) {
+                if (Math.abs((CubePositions[3] - CubePositions[0]) * cubeScale) < widest) {
                     changeShape(CubePositions, leftCube, speed, false);
                     changeShape(CubePositions, rightCube, speed, true);
                 }
@@ -294,7 +306,7 @@ function checkKeyStates() {
         
         if (ArrowRight) {
         // Perform action when right is pressed
-            if (Math.abs(CubePositions[3] - CubePositions[0]) > shortest) {
+            if (Math.abs((CubePositions[3] - CubePositions[0]) * cubeScale) > shortest) {
                 changeShape(CubePositions, leftCube, speed, true);
                 changeShape(CubePositions, rightCube, speed, false);
             }
@@ -356,17 +368,30 @@ Game.prototype.render = function(gl, w, h)
     else {
         view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, cameraY, 0.)).inverse();
     }
-    var wallModel = Matrix.translate(0, 1., wallDistance).multiply(Matrix.scale(3., 1.5, 1.));
-    var roadModel = Matrix.translate(0, -1.5, 0.).multiply(Matrix.scale(3., 1., 20.));
-    var leftTunnel = Matrix.translate(-4., 0., 0.).multiply(Matrix.scale(1., 3., 20.));
-    var rightTunnel = Matrix.translate(4., 1., 0.).multiply(Matrix.scale(1., 3., 20.));
+    var wallModel = Matrix.translate(0, 1.5, wallDistance).multiply(Matrix.scale(3., 1.5, 1.));
+    var roadModel = Matrix.translate(0, -1.0, 0.).multiply(Matrix.scale(3., 1., 20.));
+    var leftTunnel = Matrix.translate(-4., 1.5, 0.).multiply(Matrix.scale(1., 1.5, 20.));
+    var rightTunnel = Matrix.translate(4., 1.5, 0.).multiply(Matrix.scale(1., 1.5, 20.));
 
-   
+    if (wallSpeed != 0.0) {
+        wallDistance += wallSpeed;
+        if (wallDistance > -6.0 && wallDistance < -3.0) {
+            if (checkCollision(trans, height, cubeScale)) {
+                wallSpeed = 0.0;
+                collision = true;
+            }
+        }
+        else if (wallDistance > -2.0 && !collision) {
+            randomWall(WallPositions, skinniest, shortest);
+            this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
+            wallDistance = -15.;
+        }
+    }
 
     // The total height that the cube will reach with velocity
     // var velocity = Math.min(160, spacePressDuration) / 2000;
-    
-    
+    // console.log(CubePositions[14]);
+    // console.log(height, (CubePositions[14] * cubeScale) + height);
     // becomes true when space bar is released
     if (wallSpeed != 0.0) {
         if (spaceHasBeenPressed && ! jumping) {
@@ -383,17 +408,29 @@ Game.prototype.render = function(gl, w, h)
                 gravityHalved = true;
             }
             // Check if in wall window during a jump
-            console.log(wallDistance > -6. && wallDistance < -4.);
-            console.log((CubePositions[16] + height) * cubeScale);
-            console.log((WallPositions[73] * 1.5) + 1);
+            // console.log(wallDistance > -6. && wallDistance < -4.);
+            // console.log((CubePositions[16] + height) * cubeScale);
+            // console.log((WallPositions[73] * 1.5) + 1);
             // Checking for a collision
-            if (wallDistance > -5. && wallDistance < -4. && (CubePositions[16] + height) * cubeScale <= (WallPositions[73] * 1.5) + 1) {
-                console.log("Collision");
-            }
-            // Update the current score if no collision but shape passes through
-            else if (-4.1 < wallDistance < -4) {
-                updateScore();
-                console.log("Score:", score);
+            // console.log(height, (CubePositions[14] * cubeScale) + height);
+
+            console.log("wall height 1", wallDistance > -6.);
+            console.log("wall height 2", (wallDistance < -3.));
+            // console.log("height 1", (CubePositions[14] * cubeScale) + height <= (WallPositions[73] * 1.5) + 1.4);
+            console.log("height 2", (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.);
+
+
+
+            if (wallDistance > -6. && wallDistance < -3. && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
+                // height = (WallPositions[73] * 1.5) + 1.1 + cubeScale;
+                console.log("Wall distance:", wallDistance);
+                console.log("Collision", -5.98 < wallDistance && wallDistance < -5.90);
+                // console.log(-6. < wallDistance < -5.9);
+                if (-5.98 < wallDistance && wallDistance < -5.90) {
+                    updateScore();
+                    // Update the current score if no collision but shape passes through
+                    console.log("Score:", score);
+                }
             }
             else {
                 velocity = velocity - gravity * elapsedTime;
@@ -418,7 +455,7 @@ Game.prototype.render = function(gl, w, h)
 
     if (wallSpeed != 0.0) {
         wallDistance += wallSpeed;
-        if (wallDistance > -6.0 && wallDistance < -4.0) {
+        if (wallDistance > -6.0 && wallDistance < -3.0) {
             console.log(trans, height, cubeScale);
             if (checkCollision(trans, height, cubeScale)) {
                 wallSpeed = 0.0;
@@ -428,7 +465,7 @@ Game.prototype.render = function(gl, w, h)
         else if (wallDistance > -2.0 && !collision) {
             randomWall(WallPositions, skinniest, shortest);
             this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
-            wallDistance = -12.;
+            wallDistance = -15.;
         }
     }
 
