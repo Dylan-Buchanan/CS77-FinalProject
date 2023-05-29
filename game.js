@@ -62,19 +62,57 @@ var BlackFragmentSource = `
         }
     }
 `;
+//////////  Global variables  //////////
+// Cube
+var speed = 0.05; // Cube movement and growth speed
+var tallest = 2.0; // tallest cube height
+var shortest = 0.5; // shortest cube height
+var skinniest = 0.5; // skinniest cube height
+var widest = 3.0; // widest cube height
+var cubeScale = 0.5; // Cube length from middle
+var dist = -4.5; // Distance from middle of cube to camera
+var cubeModel; // Varying cube model variable
+var trans = 0; // Cube X-change
+var height = cubeScale; // Cube Y-change (Set to cube scale to move it out of the floor)
 
-var speed = 0.05;
-var tallest = 2.0;
-var shortest = 0.5;
-var skinniest = 0.5;
-var widest = 3.0;
+// Movement variables
+var collision = false;
+var upped = false;
+var downed = false;
+var widened = false;
+var space = false;
+var ableToLoadJump = true;
+var jumping = false;
+var velocity = 0; // How the y-value of the cube is changing
+var gravity = .00008; // How fast the cube falls
+var maxHeight = 2.;
+const keyStates = {
+    w: false,
+    a: false,
+    s: false,
+    d: false,
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false,
+}
+
+// Wall
 var maxWallWidth = 3.0;
 var maxWallHeight = 1.5;
-var level = 1;
-var wallDistance = -15.;
+var wallDistance = -15.; // Distance from camera
 var wallSpeed = 0.02;
-var cubeScale = 0.5;
-var collision = false;
+var wallsPassed = 0; // Number of walls player has made it through
+
+// Game variables
+var level = 1;
+var score = 0;
+
+// Camera variables
+var cameraX = 0.;
+var cameraY = 1.;
+var pan = 10.;
+/////////////////////////////////////////////////
 
 
 
@@ -92,28 +130,6 @@ var Game = function(gl)
     this.tunnel1 = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     this.tunnel2 = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     gl.enable(gl.DEPTH_TEST);
-}
-
-var dist = -4.5;
-var cubeModel;
-var trans = 0;
-var height = 0.5;
-
-var upped = false;
-var downed = false;
-var widened = false;
-var space = false;
-var ableToLoadJump = true;
-
-const keyStates = {
-    w: false,
-    a: false,
-    s: false,
-    d: false,
-    ArrowUp: false,
-    ArrowDown: false,
-    ArrowLeft: false,
-    ArrowRight: false,
 }
 
 // variables for space bar press
@@ -181,8 +197,6 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-var cameraX = 0.;
-
 // Function to check key states and perform actions
 function checkKeyStates() {
     const { a, s, d, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } = keyStates;
@@ -248,8 +262,6 @@ function checkKeyStates() {
     }
 }
 
-let score = 0;
-
 function updateScore(cubePosition, wallPosition, wallSize) {
   const cubeVolume = 1; // Assuming the cube has a volume of 1 in the z direction
 
@@ -258,22 +270,18 @@ function updateScore(cubePosition, wallPosition, wallSize) {
     return; // Perform Game Over Functions
   } 
   else {
+    wallsPassed++;
+    if (wallsPassed % 4 == 0) {
+        level++;
+        var scoreboardElement = document.getElementById('level');
+        scoreboardElement.textContent = level;
+    }
     score += cubeVolume; // Add cube's volume to the score
     var scoreboardElement = document.getElementById('score');
     scoreboardElement.textContent = score;
     return null; // Return null to indicate no collision occurred
   }
 }
-
-var maxHeight = 2;
-var minHeight = 0;
-var velocity = 0;
-var gravity = .00008;
-var jumping = false;
-
-var cameraY = 1.;
-
-var pan = 10.;
 
 Game.prototype.render = function(gl, w, h)
 {
@@ -344,11 +352,11 @@ Game.prototype.render = function(gl, w, h)
             var elapsedTime = (currentTime - spacePressEndTime) / 10;
             velocity = velocity - gravity * elapsedTime;
             height += velocity;
-            height = Math.max(minHeight, height);
+            height = Math.max(0., height);
             height = Math.min(maxHeight, height);
             // Change camera perspective on jump
             cameraY = Math.max(1.5, height + 1.5);
-            if (height == minHeight) {
+            if (height == 0.) {
                 jumping = false;
             }
         }
