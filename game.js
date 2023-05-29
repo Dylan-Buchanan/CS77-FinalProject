@@ -255,10 +255,12 @@ function updateScore(cubePosition, wallPosition, wallSize) {
 
   // Check if the cube collides with the wall
   if (collision) {
-    return score; // Return the score when collision occurs
+    return; // Perform Game Over Functions
   } 
   else {
     score += cubeVolume; // Add cube's volume to the score
+    var scoreboardElement = document.getElementById('score');
+    scoreboardElement.textContent = score;
     return null; // Return null to indicate no collision occurred
   }
 }

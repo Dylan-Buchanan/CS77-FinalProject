@@ -31,8 +31,14 @@
 <body onload="setupAssignment();">
     <div class="contentWrapper">
         <div class="canvas-container">
-            <canvas id="game" width="820" height="721"></canvas>
+            <canvas id="game" width="820" height="710"></canvas>
         </div>
+    </div>
+    <div class = "scoreboard">
+        <p class = "info">Score:</p>
+        <p class = "info" id = "score" style = "color: yellow; left: 20%">0</p>
+        <p class = "info" style = "left: 42%;">Level:</p>
+        <p class = "info" id = "level" style = "color: rgb(0, 255, 0); left: 57%">1</p>
     </div>
     <script>
         function setupAssignment() {
