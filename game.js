@@ -83,6 +83,12 @@ var widened = false;
 var space = false;
 var ableToLoadJump = true;
 var jumping = false;
+// variables for space bar press
+let spaceHasBeenPressed = false;
+let spacePressed = false;
+let spacePressStartTime = null;
+let spacePressDuration = 0;
+let spacePressEndTime = 0;
 var velocity = 0; // How the y-value of the cube is changing
 var gravity = .00008; // How fast the cube falls
 var maxHeight = 2.;
@@ -95,6 +101,7 @@ const keyStates = {
     ArrowDown: false,
     ArrowLeft: false,
     ArrowRight: false,
+    Enter: false,
 }
 
 // Wall
@@ -131,13 +138,6 @@ var Game = function(gl)
     this.tunnel2 = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     gl.enable(gl.DEPTH_TEST);
 }
-
-// variables for space bar press
-let spaceHasBeenPressed = false;
-let spacePressed = false;
-let spacePressStartTime = null;
-let spacePressDuration = 0;
-let spacePressEndTime = 0;
 
 
 document.addEventListener('keyup', (event) => {
@@ -202,7 +202,7 @@ function checkKeyStates() {
     const { a, s, d, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } = keyStates;
 
     // // Check the state of all keys
-    if (wallSpeed != 0.0) {
+    if (!collision) {
         if (a) {
         // Perform action when A is pressed
             if (checkCanMove(trans, 3., cubeScale, speed, 0)) {
@@ -263,7 +263,7 @@ function checkKeyStates() {
 }
 
 function updateScore(cubePosition, wallPosition, wallSize) {
-  const cubeVolume = 1; // Assuming the cube has a volume of 1 in the z direction
+  const cubeVolume = cubeScale * 2.; // Assuming the cube has a volume of 1 in the z direction
 
   // Check if the cube collides with the wall
   if (collision) {
@@ -279,7 +279,7 @@ function updateScore(cubePosition, wallPosition, wallSize) {
     score += cubeVolume; // Add cube's volume to the score
     var scoreboardElement = document.getElementById('score');
     scoreboardElement.textContent = score;
-    return null; // Return null to indicate no collision occurred
+    return; // Return null to indicate no collision occurred
   }
 }
 
@@ -354,6 +354,33 @@ Game.prototype.render = function(gl, w, h)
             height += velocity;
             height = Math.max(0., height);
             height = Math.min(maxHeight, height);
+            if (0 > velocity  && ! gravityHalved) {
+                gravity *= .1;
+                gravityHalved = true;
+            }
+
+
+
+
+
+
+            if (wallDistance > -6. && wallDistance < -3. && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
+
+                if (-5.98 < wallDistance && wallDistance < -5.90) {
+                    updateScore();
+                    // Update the current score if no collision but shape passes through
+                    console.log("Score:", score);
+                }
+            }
+            else {
+                velocity = velocity - gravity * elapsedTime;
+                height += velocity;
+                height = Math.max(minHeight, height);
+                height = Math.min(maxHeight, height);
+            }
+            if (height >= maxHeight) {
+                velocity = 0;
+            }
             // Change camera perspective on jump
             cameraY = Math.max(1.5, height + 1.5);
             if (height == 0.) {
@@ -362,6 +389,22 @@ Game.prototype.render = function(gl, w, h)
         }
     }
     cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(0.5, 0.5, 0.5));
+
+    if (wallSpeed != 0.0) {
+        wallDistance += wallSpeed;
+        if (wallDistance > -6.0 && wallDistance < -3.0) {
+            console.log(trans, height, cubeScale);
+            if (checkCollision(trans, height, cubeScale)) {
+                wallSpeed = 0.0;
+                collision = true;
+            }
+        }
+        else if (wallDistance > -2.0 && !collision) {
+            randomWall(WallPositions, skinniest, shortest);
+            this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
+            wallDistance = -15.;
+        }
+    }
 
     // check for the key states constantly for smooth movement
     checkKeyStates();

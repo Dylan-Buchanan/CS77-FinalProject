@@ -51,7 +51,6 @@ function resetWall(meshpos) {
 }
 
 var checkCollision = function(xChange, yChange, scale) {
-    return false;
     var ctlx = (CubePositions[15] * scale) + xChange;
     var ctrx = (CubePositions[18] * scale) + xChange;
     var cbly = (CubePositions[13] * scale) + yChange;
@@ -61,15 +60,6 @@ var checkCollision = function(xChange, yChange, scale) {
     var wtrx = WallPositions[63] * 3.;
     var wbly = (WallPositions[49] * 1.5) + 1.5;
     var wtly = (WallPositions[52] * 1.5) + 1.5;
-
-    console.log(ctlx);
-    console.log(wtlx);
-    console.log(ctrx);
-    console.log(wtrx);
-    console.log(cbly);
-    console.log(wbly);
-    console.log(ctly);
-    console.log(wtly);
 
     if (wtlx > ctlx || wtrx < ctrx) {
         return true;
