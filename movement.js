@@ -64,14 +64,11 @@ function resetWall(meshpos) {
     }
 }
 
-var checkCollision = function(xScale, yScale, xChange, yChange) {
-    var ctlx = (CubePositions[15] * xScale) + xChange;
-    var ctrx = (CubePositions[18] * xScale) + xChange;
-    var cbly = (CubePositions[13] * yScale) + yChange;
-    var ctly = (CubePositions[16] * yScale) + yChange;
-
-    console.log(ctlx);
-    console.log(wtlx);
+var checkCollision = function(xChange, yChange, scale) {
+    var ctlx = (CubePositions[15] + xChange) * scale;
+    var ctrx = (CubePositions[18] + xChange) * scale;
+    var cbly = (CubePositions[13] + yChange) * scale;
+    var ctly = (CubePositions[16] + xChange) * scale;
 
     var wtlx = WallPositions[51] * 3.;
     var wtrx = WallPositions[63] * 3.;

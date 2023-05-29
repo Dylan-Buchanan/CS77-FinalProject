@@ -306,17 +306,9 @@ function checkKeyStates() {
 
 let score = 0;
 
-function updateScore(cubePosition, wallPosition, wallSize) {
-  const cubeVolume = 1; // Assuming the cube has a volume of 1 in the z direction
-
-  // Check if the cube collides with the wall
-  if (collision) {
-    return score; // Return the score when collision occurs
-  } 
-  else {
-    score += cubeVolume; // Add cube's volume to the score
-    return null; // Return null to indicate no collision occurred
-  }
+function updateScore() {
+  var cubeVolume = Math.floor((CubePositions[21] - CubePositions[12]) * (CubePositions[16] - CubePositions[13]));
+  score += cubeVolume;
 }
 
 var maxHeight = 3;
@@ -394,8 +386,14 @@ Game.prototype.render = function(gl, w, h)
             console.log(wallDistance > -6. && wallDistance < -4.);
             console.log((CubePositions[16] + height) * cubeScale);
             console.log((WallPositions[73] * 1.5) + 1);
-            if (wallDistance > -6. && wallDistance < -4. && (CubePositions[16] + height) * cubeScale <= (WallPositions[73] * 1.5) + 1) {
-                console.log("Here");
+            // Checking for a collision
+            if (wallDistance > -5. && wallDistance < -4. && (CubePositions[16] + height) * cubeScale <= (WallPositions[73] * 1.5) + 1) {
+                console.log("Collision");
+            }
+            // Update the current score if no collision but shape passes through
+            else if (-4.1 < wallDistance < -4) {
+                updateScore();
+                console.log("Score:", score);
             }
             else {
                 velocity = velocity - gravity * elapsedTime;
@@ -421,7 +419,8 @@ Game.prototype.render = function(gl, w, h)
     if (wallSpeed != 0.0) {
         wallDistance += wallSpeed;
         if (wallDistance > -6.0 && wallDistance < -4.0) {
-            if (checkCollision(cubeScale, cubeScale, 0., height)) {
+            console.log(trans, height, cubeScale);
+            if (checkCollision(trans, height, cubeScale)) {
                 wallSpeed = 0.0;
                 collision = true;
             }
