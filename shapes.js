@@ -93,10 +93,10 @@ function resetCube() {
 // Hole Cube
 var WallPositions = [
   // Top face
-  -1,  1,  1,
-   1,  1,  1,
-   1,  1, -1,
-  -1,  1, -1,
+  -1,  2,  1,
+   1,  2,  1,
+   1,  2, -1,
+  -1,  2, -1,
 
   // Bottom face
   -1, -1,  1,
@@ -106,14 +106,14 @@ var WallPositions = [
 
   // Right face
    1, -1,  1,
-   1,  1,  1,
-   1,  1, -1,
+   1,  2,  1,
+   1,  2, -1,
    1, -1, -1,
 
   // Left face
   -1, -1,  1,
-  -1,  1,  1,
-  -1,  1, -1,
+  -1,  2,  1,
+  -1,  2, -1,
   -1, -1, -1,
 
   // Inner Left
@@ -141,20 +141,20 @@ var WallPositions = [
   0.5, 0.5, 1,     //*31
 
   // Front Left
-  -1, 1, 1,
-  -0.5, 1, 1,   //*33
+  -1, 2, 1,
+  -0.5, 2, 1,   //*33
   -0.5, -1, 1,  //*34
   -1, -1, 1,
 
   // Front Right
-  0.5, 1, 1,    //*36
-  1, 1, 1,
+  0.5, 2, 1,    //*36
+  1, 2, 1,
   1, -1, 1,
   0.5, -1, 1,   //*39
 
   // Front Top
-  -0.5, 1, 1,   //40
-  0.5, 1, 1,    //41
+  -0.5, 2, 1,   //40
+  0.5, 2, 1,    //41
   0.5, 0.5, 1,  //42
   -0.5, 0.5, 1, //43
 
@@ -254,3 +254,58 @@ var WallIndices = [
    44, 45, 46, 44, 46, 47,
 ];
 
+var RoadPositions = [
+  -1, -1,  1,
+  1, -1,  1,
+  1, -1, -1,
+  -1, -1, -1
+]
+
+var RoadNormals = [
+  0, 1, 0,
+  0, 1, 0,
+  0, 1, 0,
+  0, 1, 0
+]
+
+var RoadIndices = [
+  0, 1, 2, 0, 2, 3
+]
+
+var LeftTunnelPositions = [
+   // Left face
+   -1, -1,  1,
+   -1,  1,  1,
+   -1,  1, -1,
+   -1, -1, -1,
+]
+
+var LeftTunnelNormals = [
+  1, 0, 0,
+  1, 0, 0,
+  1, 0, 0,
+  1, 0, 0
+]
+
+var LeftTunnelIndices = [
+  0, 1, 2, 0, 2, 3
+]
+
+var RightTunnelPositions = [
+  // Right face
+  1, -1,  1,
+  1,  1,  1,
+  1,  1, -1,
+  1, -1, -1,
+]
+
+var RightTunnelNormals = [
+ -1, 0, 0,
+ -1, 0, 0,
+ -1, 0, 0,
+ -1, 0, 0
+]
+
+var RightTunnelIndices = [
+ 0, 1, 2, 0, 2, 3
+]
