@@ -1,78 +1,72 @@
 var BlackVertexSource = `
     uniform mat4 ModelViewProjection;
-    
     attribute vec3 Position;
+    attribute vec3 Normal;
+
+    varying vec3 Color;
+    varying float DistanceToLight;
+
+    uniform mat4 ModelView;
+    uniform mat4 NormalMatrix;
+    uniform mat4 View;
+    uniform mat4 Model;
 
     uniform float Type;
 
-    uniform float wallDist;
+    const vec3 LightPosition = vec3(0.0, 1.0, -2.0);
+    const vec3 LightIntensity = vec3(20.0);
 
-    varying vec3 Color;
-
-    varying float depthValue;
-    
     void main() {
-        vec4 position = vec4(Position.x, Position.y, Position.z, 1.0);
-        gl_Position = ModelViewProjection * position;
-
-        depthValue = gl_Position.z;
-
-        vec3 p = vec3(gl_Position);
         
-        if (Type == 1.0) {  
-            float col;
-            float col2;
-            if (p.z <= 0.0) {
-                col = 1.0;
-            }
-            else {
-                float rev = (wallDist + 1.) - abs(p.z);
-                col = (rev * rev) / 4.0;
-            }
-
-            Color = vec3(1.0 * col, 0.0, 0.0);
+        if (Type == 1.0) { 
+            Color = vec3(1.0, 0.0, 0.0);
         }
-       
         else if (Type == 2.0) {
             Color = vec3(1.0, 1.0, 0.0);
         }
-
         else if (Type == 3.0) {
             Color = vec3(0.0, 0.0, 1.0);
         }
-
         else {
-            Color = vec3(0.0, 0.0, 0.0);
+            Color = vec3(0.1, 0.5, 0.1);
         }
+        vec3 ka = Color;
+        vec3 kd = 0.7 * Color;
+
+        vec4 position = vec4(Position.x, Position.y, Position.z, 1.0);
+
+        gl_Position = ModelViewProjection * position;
+
+        mat3 normalMatrix = mat3(NormalMatrix);
+
+        vec3 newPosition = vec3(ModelView * position);
+
+        vec3 normal = normalize(normalMatrix * Normal);
+
+        vec3 LightDirection = normalize(vec3(View * vec4(LightPosition, 1.0)) - newPosition);
+
+        float DiffuseFactor = max(dot(normal, LightDirection), 0.0);
+
+        float Distance = length(LightPosition - vec3(Model * vec4(Position, 1.0)));
+        vec3 SurfaceColor = LightIntensity / (Distance * Distance);
+        vec3 DiffuseColor = ka + SurfaceColor * DiffuseFactor;
+
+        Color = kd * DiffuseColor;
+        
     }
 `;
+
 var BlackFragmentSource = `
     precision highp float;
 
     varying vec3 Color;
-
-    uniform float Type;
-
-    varying float depthValue;
-
+    
     void main() {
-        float currDepth = gl_FragCoord.z;
-        if (currDepth > depthValue) {
-            discard;
-        }
-        float prevC = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
-        float newC = Color.x + Color.y + Color.z;
-
-        if (Type != 0.0) {
-            if (newC > prevC) {
-                gl_FragColor = vec4(Color, 1.0);
-            }
-        }
-        else {
-            gl_FragColor = vec4(Color, 1.0);
-        }
+        gl_FragColor = vec4(Color, 1.0);
     }
 `;
+
+
 //////////  Global variables  //////////
 // Cube
 var speed = 0.05; // Cube movement and growth speed
@@ -341,9 +335,11 @@ function updateScore() {
             var scoreboardElement = document.getElementById('level');
             scoreboardElement.textContent = level;
         }
-        var cubeVolume = ((CubePositions[21] - CubePositions[12]) * cubeScale) * ((CubePositions[16] - CubePositions[13]) * cubeScale);
-        var holeVolume = ((WallPositions[63] - WallPositions[51]) * maxWallWidth) * ((WallPositions[52] - WallPositions[49]) * maxWallHeight);
-        score += Math.ceil(cubeVolume / holeVolume * 100);
+        var cubeVolume = ((CubePositions[21] - CubePositions[12]) ) * ((CubePositions[16] - CubePositions[13]) ) * cubeScale;
+        var holeVolume = ((WallPositions[63] - WallPositions[51]) ) * ((WallPositions[52] - WallPositions[49]) ) * maxWallHeight * maxWallWidth;
+        console.log(CubePositions[21],CubePositions[12], CubePositions[16],  CubePositions[13]);
+        console.log(WallPositions[63], WallPositions[51], WallPositions[52], WallPositions[49]);
+        score += Math.ceil((cubeVolume / holeVolume) * 100);
         // score += cubeVolume; // Add cube's volume to the score
         var scoreboardElement = document.getElementById('score');
         scoreboardElement.textContent = score;
@@ -356,7 +352,6 @@ function updateScore() {
 
 Game.prototype.render = function(gl, w, h)
 {
-    console.log(scored);
 
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -416,7 +411,6 @@ Game.prototype.render = function(gl, w, h)
             if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5) && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
                 if ((dist - 1.48) < wallDistance && !scored) {
                     // Update the current score if no collision but shape passes through
-                    console.log("in here");
                     updateScore();
                 }
             }
@@ -430,7 +424,7 @@ Game.prototype.render = function(gl, w, h)
                 velocity = 0;
             }
             // Change camera perspective on jump
-            cameraY = Math.max(2. * cubeScale, height + cubeScale);
+            cameraY = Math.max(2. * cubeScale, height);
             if (height == cubeScale) {
                 velocity = 0;
                 gravity *= (1 / lowerGravVal);
@@ -444,7 +438,6 @@ Game.prototype.render = function(gl, w, h)
 
     if (! collision) {
         wallDistance += wallSpeed;
-        console.log(wallDistance);
         if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5)) {
             if (checkCollision(trans, height, cubeScale, maxWallWidth, maxWallHeight)) {
                 wallSpeed = 0.0;

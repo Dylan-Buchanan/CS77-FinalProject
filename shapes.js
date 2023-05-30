@@ -309,3 +309,79 @@ var RightTunnelNormals = [
 var RightTunnelIndices = [
  0, 1, 2, 0, 2, 3
 ]
+
+// var BlackVertexSource = `
+//     uniform mat4 ModelViewProjection;
+    
+//     attribute vec3 Position;
+
+//     uniform float Type;
+
+//     uniform float wallDist;
+
+//     varying vec3 Color;
+
+//     varying float depthValue;
+    
+//     void main() {
+//         vec4 position = vec4(Position.x, Position.y, Position.z, 1.0);
+//         gl_Position = ModelViewProjection * position;
+
+//         depthValue = gl_Position.z;
+
+//         vec3 p = vec3(gl_Position);
+        
+//         if (Type == 1.0) {  
+//             float col;
+//             float col2;
+//             if (p.z <= 0.0) {
+//                 col = 1.0;
+//             }
+//             else {
+//                 float rev = (wallDist + 1.) - abs(p.z);
+//                 col = (rev * rev) / 4.0;
+//             }
+
+//             Color = vec3(1.0 * col, 0.0, 0.0);
+//         }
+       
+//         else if (Type == 2.0) {
+//             Color = vec3(1.0, 1.0, 0.0);
+//         }
+
+//         else if (Type == 3.0) {
+//             Color = vec3(0.0, 0.0, 1.0);
+//         }
+
+//         else {
+//             Color = vec3(0.0, 0.0, 0.0);
+//         }
+//     }
+// `;
+// var BlackFragmentSource = `
+//     precision highp float;
+
+//     varying vec3 Color;
+
+//     uniform float Type;
+
+//     varying float depthValue;
+
+//     void main() {
+//         float currDepth = gl_FragCoord.z;
+//         if (currDepth > depthValue) {
+//             discard;
+//         }
+//         float prevC = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
+//         float newC = Color.x + Color.y + Color.z;
+
+//         if (Type != 0.0) {
+//             if (newC > prevC) {
+//                 gl_FragColor = vec4(Color, 1.0);
+//             }
+//         }
+//         else {
+//             gl_FragColor = vec4(Color, 1.0);
+//         }
+//     }
+// `;
