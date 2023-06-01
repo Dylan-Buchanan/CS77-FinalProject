@@ -145,9 +145,8 @@ var Game = function(gl)
     }
     this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
     this.cubeMesh = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
-    // this.road = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     this.road = new ShadedTriangleMesh(gl, RoadPositions, RoadNormals, RoadIndices, BlackVertexSource, BlackFragmentSource);
-    this.tunnel1 = new ShadedTriangleMesh(gl, LeftTunnelPositions, LeftTunnelNormals, LeftTunnelIndices, BlackVertexSource, BlackFragmentSource);
+    this.tunnel1 = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     this.tunnel2 = new ShadedTriangleMesh(gl, RightTunnelPositions, RightTunnelNormals, RightTunnelIndices, BlackVertexSource, BlackFragmentSource);
     gl.enable(gl.DEPTH_TEST);
 }
@@ -379,7 +378,7 @@ function updateScore() {
         if (wallsPassed % wallsPerLevel == 0) {
             level++;
             wallSpeed *= 2.0;
-            startingWallDistance -= 5.;
+            startingWallDistance -= level * 5.;
             var scoreboardElement = document.getElementById('level');
             scoreboardElement.textContent = level;
         }
@@ -410,8 +409,8 @@ Game.prototype.render = function(gl, w, h)
 
     // Models
     var wallModel = Matrix.translate(0, maxWallHeight, wallDistance).multiply(Matrix.scale(maxWallWidth, maxWallHeight, 1.));
-    var roadModel = Matrix.translate(0, 1., 0.).multiply(Matrix.scale(maxWallWidth, 1., 20.));
-    var leftTunnel = Matrix.translate(-maxWallWidth + 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
+    var roadModel = Matrix.translate(0., 1., 0.).multiply(Matrix.scale(maxWallWidth, 1., 20.));
+    var leftTunnel = Matrix.translate(-maxWallWidth - 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
     var rightTunnel = Matrix.translate(maxWallWidth - 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
 
     if (playing) {
