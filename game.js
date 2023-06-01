@@ -17,6 +17,7 @@ var BlackVertexSource = `
     const vec3 LightIntensity = vec3(20.0);
 
     void main() {
+
         
         if (Type == 1.0) { 
             Color = vec3(1.0, 0.0, 0.0);
@@ -42,17 +43,44 @@ var BlackVertexSource = `
         vec3 newPosition = vec3(ModelView * position);
 
         vec3 normal = normalize(normalMatrix * Normal);
-
+        
         vec3 LightDirection = normalize(vec3(View * vec4(LightPosition, 1.0)) - newPosition);
 
-        float DiffuseFactor = max(dot(normal, LightDirection), 0.0);
+        float DiffuseFactor = max(dot(normal, LightDirection), -1.0);
 
-        float Distance = length(LightPosition - vec3(Model * vec4(Position, 1.0)));
+        float Distance = 0.;
+
+        if (Type == 3.0) {
+            Distance = length(LightPosition - vec3(Model * vec4(Position, 1.0))) / Position.z;
+            if (Distance > 1.86) {
+                Color = vec3(0., 0., 0.);
+                ka = Color;
+                kd = 0.7 * Color;
+            }
+        }
+
+        else if (Type == 2.0) {
+            Distance = length(LightPosition - vec3(Model * vec4(Position, 1.0))) / Position.z;
+            if (Distance < -20.) {
+                Color = vec3(0.1, 0.1, 0.);
+                ka = Color;
+                kd = 0.7 * Color;
+            }
+        }
+
+        else {
+            Distance = length(LightPosition - vec3(Model * vec4(Position, 1.0)));
+        }
+
         vec3 SurfaceColor = LightIntensity / (Distance * Distance);
+
         vec3 DiffuseColor = ka + SurfaceColor * DiffuseFactor;
 
-        Color = kd * DiffuseColor;
-        
+        Color = kd * max(DiffuseColor, 0.1);
+
+        if (gl_Position.z < -1.) {
+            Color = vec3(0., 0., 0.);
+        }
     }
 `;
 
@@ -95,8 +123,8 @@ let spacePressStartTime = null;
 let spacePressDuration = 0;
 let spacePressEndTime = 0;
 var velocity = 0; // How the y-value of the cube is changing
-var gravity = .000008; // How fast the cube falls
-const lowerGravVal = 0.01;
+var gravity = .00008; // How fast the cube falls
+const lowerGravVal = 0.1;
 var lowerGrav = false;
 const maxHeight = 3.;
 const keyStates = {
@@ -116,7 +144,7 @@ const maxWallWidth = 3.0;
 const maxWallHeight = 1.5;
 var startingWallDistance = -15.;
 var wallDistance = startingWallDistance; // Distance from camera
-var wallSpeed = 0.01;
+var wallSpeed = 0.1;
 var wallsPassed = 0; // Number of walls player has made it through
 
 // Game variables
@@ -185,7 +213,7 @@ function restartGame() {
     spacePressDuration = 0;
     spacePressEndTime = 0;
     velocity = 0; // How the y-value of the cube is changing
-    gravity = .000008; // How fast the cube falls
+    gravity = .00008; // How fast the cube falls
     lowerGrav = false;
     for (key in keyStates) {
         keyStates[key] = false;
@@ -195,7 +223,7 @@ function restartGame() {
     startingWallDistance = -15.;
     wallDistance = startingWallDistance; // Distance from camera
     wallsPassed = 0; // Number of walls player has made it through
-    wallSpeed = .01;
+    wallSpeed = .05;
 
     // Game variables
     level = 1;
@@ -374,11 +402,14 @@ Game.prototype.render = function(gl, w, h)
     var projection = Matrix.perspective(45, w/h, 0.1, 100);
     var view;
 
-    // Models
+    // Models 
     var wallModel = Matrix.translate(0, maxWallHeight, wallDistance).multiply(Matrix.scale(maxWallWidth, maxWallHeight, 1.));
     var roadModel = Matrix.translate(0, 1., 0.).multiply(Matrix.scale(maxWallWidth, 1., 20.));
     var leftTunnel = Matrix.translate(-maxWallWidth + 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
     var rightTunnel = Matrix.translate(maxWallWidth - 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
+    // var leftTunnel = Matrix.translate(-maxWallWidth, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
+    // var rightTunnel = Matrix.translate(maxWallWidth, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
+
 
     if (playing) {
         // Cutscene
@@ -429,7 +460,7 @@ Game.prototype.render = function(gl, w, h)
         if (!collision) {
             if (spaceHasBeenPressed && !jumping) {
                 // Initial velocity based on length of space press
-                velocity = Math.min(160, spacePressDuration / 2.0) / 4000;
+                velocity = Math.min(160, spacePressDuration) / 2000;
                 spaceHasBeenPressed = false;
                 jumping = true;
             }

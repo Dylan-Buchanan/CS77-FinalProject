@@ -13,20 +13,22 @@ ShadedTriangleMesh.prototype.render = function(gl, model, view, projection, type
     
     gl.useProgram(this.shaderProgram);
     
-    // Assemble a model-view-projection matrix from the specified matrices.
+    gl.useProgram(this.shaderProgram);
+    
     var modelViewProjection = projection.multiply(view).multiply(model);
 
-    // gl.uniform3fv(gl.getUniformLocation(this.shaderProgram, "LightPosition"), this.lightPosition);  // Light position
-
-    // Pass the matrix to a shader uniform
     gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "ModelViewProjection"), false, modelViewProjection.transpose().m); 
+    
+    var ModelView = view.multiply(model);
+    gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "ModelView"), false, ModelView.transpose().m); 
 
-    var modelView = view.multiply(model);
-    gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "ModelView"), false, modelView.transpose().m);
-    var normalMatrix = Matrix.inverse(modelView).transpose();
-    gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "NormalMatrix"), false, normalMatrix.transpose().m);
-    gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "View"), false, view.transpose().m);
+    var NormalMatrix = ModelView.inverse().transpose();
+    gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "NormalMatrix"), false, NormalMatrix.transpose().m); 
+
     gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "Model"), false, model.transpose().m);
+
+    gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "View"), false, view.transpose().m);
+
 
     // 0 = cube, 1 = wall, 2 = road
     gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "Type"), type);

@@ -255,10 +255,10 @@ var WallIndices = [
 ];
 
 var RoadPositions = [
-  -1, -1,  1,
-  1, -1,  1,
-  1, -1, -1,
-  -1, -1, -1
+  -1., -1.,  1.,
+  1., -1.,  1.,
+  1., -1., -1.,
+  -1., -1., -1.
 ]
 
 var RoadNormals = [
@@ -274,10 +274,10 @@ var RoadIndices = [
 
 var LeftTunnelPositions = [
    // Left face
-   -1, -1,  1,
-   -1,  1,  1,
-   -1,  1, -1,
-   -1, -1, -1,
+   -1., -1.,  1.,
+   -1.,  1.,  1.,
+   -1.,  1., -1.,
+   -1., -1., -1.,
 ]
 
 var LeftTunnelNormals = [
@@ -293,10 +293,10 @@ var LeftTunnelIndices = [
 
 var RightTunnelPositions = [
   // Right face
-  1, -1,  1,
-  1,  1,  1,
-  1,  1, -1,
-  1, -1, -1,
+  1., -1.,  1.,
+  1.,  1.,  1.,
+  1.,  1., -1.,
+  1., -1., -1.,
 ]
 
 var RightTunnelNormals = [
