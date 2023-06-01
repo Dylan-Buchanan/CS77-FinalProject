@@ -1,6 +1,5 @@
-function changeShape(meshpos, pos, amt, dir)
-{
-    // 0 = wide, 1 = shrink, 2 = tall, 3 = short
+function changeShape(meshpos, pos, amt, dir) {
+    // Increase or decrease a mesh position by a certain amount
     if (dir) {
         for (var i = 0; i < pos.length; i++) {
             meshpos[pos[i]] += amt;
@@ -14,18 +13,22 @@ function changeShape(meshpos, pos, amt, dir)
 }
 
 function randomWall(meshpos, cubeMinWidth, cubeMinHeight) {
+    // Set the wall back to unit space
     resetWall();
-    cubeMinWidth = cubeMinWidth;
-    cubeMinHeight = cubeMinHeight;
+    cubeMinWidth = cubeMinWidth * 1.5;
+    cubeMinHeight = cubeMinHeight * 1.5;
 
+    // Generate the left and right wall displacement based on a maximum distance between them
     var left = Math.random() * (2. - cubeMinWidth) - 0.5;
     var minX = (1. - left - cubeMinWidth) * -1.;
     var right = Math.random() * (0.5 - minX) + minX;
 
+    // Same for bottom and top
     var bottom = Math.random() * (2. - cubeMinHeight) - 0.5;
     var minY = (1. - bottom - cubeMinHeight) * -1.;
     var top = Math.random() * (0.5 - minY) + minY;
 
+    // Change the wall
     changeShape(meshpos, leftWall, left, true);
     changeShape(meshpos, rightWall, right, true);
     changeShape(meshpos, topWall, top, true);
@@ -51,6 +54,7 @@ function resetWall() {
 }
 
 var checkCollision = function(xChange, yChange, scale, maxWallWidth, maxWallHeight) {
+    // top left x, top right x, bottom left y, top left y 
     var ctlx = (CubePositions[15] * scale) + xChange;
     var ctrx = (CubePositions[18] * scale) + xChange;
     var cbly = (CubePositions[13] * scale) + yChange;
@@ -61,6 +65,7 @@ var checkCollision = function(xChange, yChange, scale, maxWallWidth, maxWallHeig
     var wbly = (WallPositions[49] * maxWallHeight) + maxWallHeight;
     var wtly = (WallPositions[52] * maxWallHeight) + maxWallHeight;
 
+    // Make sure the cube is inside the wall
     if (wtlx > ctlx || wtrx < ctrx) {
         return true;
     }
@@ -71,6 +76,7 @@ var checkCollision = function(xChange, yChange, scale, maxWallWidth, maxWallHeig
 }
 
 var checkCanMove = function(xChange, maxX, scale, speed, input) {
+    // Check if the cube can move or grow based on the walls
     // 0 = left, 1 = right, 2 = grow
     var xDist = (Math.abs(CubePositions[12]) + Math.abs(CubePositions[21])) * scale / 2.;
     if (input == 0 || input == 2) {
@@ -86,6 +92,7 @@ var checkCanMove = function(xChange, maxX, scale, speed, input) {
     return true;
 }
 
+// Position indicies that need to be changed to move a face
 var rightCube = [
     3, 6, 18, 21, 30,
     33, 39, 42, 48, 51,

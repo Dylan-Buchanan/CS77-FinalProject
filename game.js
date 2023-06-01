@@ -1,68 +1,81 @@
 var BlackVertexSource = `
     uniform mat4 ModelViewProjection;
-    
     attribute vec3 Position;
+    attribute vec3 Normal;
+
+    varying vec3 Color;
+    varying float DistanceToLight;
+
+    uniform mat4 ModelView;
+    uniform mat4 NormalMatrix;
+    uniform mat4 View;
+    uniform mat4 Model;
 
     uniform float Type;
 
-    uniform float wallDist;
+    const vec3 LightPosition = vec3(0.0, 1.0, -2.0);
+    const vec3 LightIntensity = vec3(20.0);
 
-    varying vec3 Color;
-
-    
     void main() {
-        vec4 position = vec4(Position.x, Position.y, Position.z, 1.0);
-        gl_Position = ModelViewProjection * position;
-
-        vec3 p = vec3(gl_Position);
         
-        if (Type == 1.0) {  
-            float col;
-            float col2;
-            if (p.z <= 0.0) {
-                col = 1.0;
-            }
-            else {
-                float rev = (wallDist + 1.) - abs(p.z);
-                col = (rev * rev) / 4.0;
-            }
-
-            Color = vec3(1.0 * col, 0.0, 0.0);
+        if (Type == 1.0) { 
+            Color = vec3(1.0, 0.0, 0.0);
         }
-       
         else if (Type == 2.0) {
             Color = vec3(1.0, 1.0, 0.0);
         }
-
         else if (Type == 3.0) {
             Color = vec3(0.0, 0.0, 1.0);
         }
-
         else {
-            Color = vec3(0.0, 0.0, 0.0);
+            Color = vec3(0.1, 0.5, 0.1);
         }
+        vec3 ka = Color;
+        vec3 kd = 0.7 * Color;
+
+        vec4 position = vec4(Position.x, Position.y, Position.z, 1.0);
+
+        gl_Position = ModelViewProjection * position;
+
+        mat3 normalMatrix = mat3(NormalMatrix);
+
+        vec3 newPosition = vec3(ModelView * position);
+
+        vec3 normal = normalize(normalMatrix * Normal);
+
+        vec3 LightDirection = normalize(vec3(View * vec4(LightPosition, 1.0)) - newPosition);
+
+        float DiffuseFactor = max(dot(normal, LightDirection), 0.0);
+
+        float Distance = length(LightPosition - vec3(Model * vec4(Position, 1.0)));
+        vec3 SurfaceColor = LightIntensity / (Distance * Distance);
+        vec3 DiffuseColor = ka + SurfaceColor * DiffuseFactor;
+
+        Color = kd * DiffuseColor;
+        
     }
 `;
+
 var BlackFragmentSource = `
     precision highp float;
 
     varying vec3 Color;
-
-    uniform float Type;
-
+    
     void main() {
         gl_FragColor = vec4(Color, 1.0);
     }
 `;
+
+
 //////////  Global variables  //////////
 // Cube
 var speed = 0.05; // Cube movement and growth speed
-var tallest = 2.0; // tallest cube height
-var shortest = 0.5; // shortest cube height
-var skinniest = 0.5; // skinniest cube height
-var widest = 3.0; // widest cube height
-var cubeScale = 0.5; // Cube length from middle
-var dist = -4.5; // Distance from middle of cube to camera
+const tallest = 2.0; // tallest cube height
+const shortest = 0.5; // shortest cube height
+const skinniest = 0.5; // skinniest cube height
+const widest = 3.0; // widest cube height
+const cubeScale = 0.5; // Cube length from middle
+const dist = -4.5; // Distance from middle of cube to camera
 var cubeModel; // Varying cube model variable
 var trans = 0; // Cube X-change
 var height = cubeScale; // Cube Y-change (Set to cube scale to move it out of the floor)
@@ -83,9 +96,9 @@ let spacePressDuration = 0;
 let spacePressEndTime = 0;
 var velocity = 0; // How the y-value of the cube is changing
 var gravity = .000008; // How fast the cube falls
-var lowerGravVal = 0.01;
+const lowerGravVal = 0.01;
 var lowerGrav = false;
-var maxHeight = 3.;
+const maxHeight = 3.;
 const keyStates = {
     w: false,
     a: false,
@@ -99,24 +112,25 @@ const keyStates = {
 }
 
 // Wall
-var maxWallWidth = 3.0;
-var maxWallHeight = 1.5;
+const maxWallWidth = 3.0;
+const maxWallHeight = 1.5;
 var startingWallDistance = -15.;
 var wallDistance = startingWallDistance; // Distance from camera
-var wallSpeed = 0.004;
+var wallSpeed = 0.01;
 var wallsPassed = 0; // Number of walls player has made it through
 
 // Game variables
 var level = 1;
-var wallsPerLevel = 4;
+const wallsPerLevel = 4;
 var score = 0;
 var scored = false;
 var reset = false;
+var playing = false;
 
 // Camera variables
 var cameraX = 0.;
 var cameraY = 1.;
-var pan = 3.;
+var pan = maxWallWidth;
 /////////////////////////////////////////////////
 
 var Game = function(gl)
@@ -137,10 +151,24 @@ var Game = function(gl)
 }
 
 function restartGame() {
+    if (!playing) {
+        var scoreboardDiv = document.createElement('div');
+        scoreboardDiv.className = 'scoreboard';
+        scoreboardDiv.innerHTML = `
+            <p class="info">Score:</p>
+            <p class="info" id="score" style="color: yellow; left: 20%">0</p>
+            <p class="info" style="left: 42%;">Level:</p>
+            <p class="info" id="level" style="color: rgb(0, 255, 0); left: 57%">1</p>
+        `;
+        
+        document.body.appendChild(scoreboardDiv);
+    }
+
     resetCube();
     randomWall(WallPositions, skinniest, shortest);
     trans = 0; // Cube X-change
     height = cubeScale; // Cube Y-change (Set to cube scale to move it out of the floor)
+    speed = 0.05;
 
     // Movement variables
     collision = false;
@@ -164,9 +192,10 @@ function restartGame() {
     }
 
     // Wall
+    startingWallDistance = -15.;
     wallDistance = startingWallDistance; // Distance from camera
     wallsPassed = 0; // Number of walls player has made it through
-    wallSpeed = .004;
+    wallSpeed = .01;
 
     // Game variables
     level = 1;
@@ -177,6 +206,7 @@ function restartGame() {
     var scoreboardElement1 = document.getElementById('score');
     scoreboardElement1.textContent = score;
     reset = true;
+    playing = true;
 
     // Camera variables
     cameraX = 0.;
@@ -245,7 +275,7 @@ function checkKeyStates() {
     const { a, d, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Enter } = keyStates;
 
     // // Check the state of all keys
-    if (!collision) {
+    if (!collision && playing) {
         if (a) {
         // Perform action when A is pressed
             if (checkCanMove(trans, maxWallWidth, cubeScale, speed, 0)) {
@@ -309,169 +339,178 @@ function checkKeyStates() {
 }
 
 function updateScore() {
-    console.log("changed scored");
-  // Check if the cube collides with the wall
+    // Check if the cube collides with the wall
     if (collision) {
         return; // Perform Game Over Functions
     } 
     else {
     wallsPassed++;
+        // Change the level and wall speed based on the number of walls passed
         if (wallsPassed % wallsPerLevel == 0) {
             level++;
+            wallSpeed *= 2.0;
+            startingWallDistance -= 5.;
             var scoreboardElement = document.getElementById('level');
             scoreboardElement.textContent = level;
         }
-        var cubeVolume = ((CubePositions[21] - CubePositions[12]) * cubeScale) * ((CubePositions[16] - CubePositions[13]) * cubeScale);
-        var holeVolume = ((WallPositions[63] - WallPositions[51]) * maxWallWidth) * ((WallPositions[52] - WallPositions[49]) * maxWallHeight);
-        score += Math.ceil(cubeVolume / holeVolume * 100);
-        // score += cubeVolume; // Add cube's volume to the score
+        var cubeVolume = ((CubePositions[21] - CubePositions[12]) ) * ((CubePositions[16] - CubePositions[13]) ) * cubeScale;
+        var holeVolume = ((WallPositions[63] - WallPositions[51]) ) * ((WallPositions[52] - WallPositions[49]) ) * maxWallHeight * maxWallWidth;
+        score += Math.min(100, Math.ceil((cubeVolume / holeVolume) * 100));
+
+        // Update the score
         var scoreboardElement = document.getElementById('score');
         scoreboardElement.textContent = score;
-        
         scored = true;
-        
-        return; // Return null to indicate no collision occurred
     }
 }
 
 Game.prototype.render = function(gl, w, h)
 {
-    console.log(scored);
-
+    // gl initialization
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    // gl.disable(gl.DEPTH_TEST);
-    // gl.disable(gl.DEPTH_TEST);
     
+    // Model space intialization
     var projection = Matrix.perspective(45, w/h, 0.1, 100);
     var view;
-    if (collision) {
-        var panDist = (dist) * Math.abs(pan / 3.5);
-        if (pan <= 3.0 && pan > 2.75 && speed == 0.05) {
-            pan = pan - (speed * 0.02);
-        }
-        else if (pan <= 2.75 && pan >= -2.75 && speed == 0.05) {
-            pan = pan - (speed * 0.25);
-        }
+
+    // Models
+    var wallModel = Matrix.translate(0, maxWallHeight, wallDistance).multiply(Matrix.scale(maxWallWidth, maxWallHeight, 1.));
+    var roadModel = Matrix.translate(0, 1., 0.).multiply(Matrix.scale(maxWallWidth, 1., 20.));
+    var leftTunnel = Matrix.translate(-maxWallWidth + 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
+    var rightTunnel = Matrix.translate(maxWallWidth - 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
+
+    if (playing) {
+        // Cutscene
+        if (collision) {
+            var panDist = (dist) * Math.abs(pan / 3.5);
+            if (pan <= maxWallWidth && pan > (maxWallWidth * 0.9) && speed == 0.05) {
+                pan = pan - (speed * 0.02);
+            }
+            else if (pan <= (maxWallWidth * 0.9)  && pan >= (-maxWallWidth * 0.9) && speed == 0.05) {
+                pan = pan - (speed * 0.25);
+            }
+            else {
+                speed = speed / 4.0;
+                pan = pan + speed;
+                if (pan >= maxWallWidth) {
+                    pan = maxWallWidth;
+                    speed = 0.05;
+                }
+            }
+            xView = ((CubePositions[12] + CubePositions[21]) / 2.) + trans;
+            yView = (CubePositions[13] + CubePositions[16]) / 2. + height;
+            view = Matrix.lookAt(pan, 1.5, panDist, xView, yView, dist - 0.5, 0, 1, 0);  
+        }  
         else {
-            speed = 0.0125;
-            pan = pan + speed;
-            if (pan >= 3.0) {
-                pan = 3.0 ;
-                speed = 0.05;
+            view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, cameraY, 0.)).inverse();
+        }
+
+        // Move wall and check for collision
+        if (!collision) {
+            wallDistance += wallSpeed;
+            if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5)) {
+                if (checkCollision(trans, height, cubeScale, maxWallWidth, maxWallHeight)) {
+                    wallSpeed = 0.0;
+                    collision = true;
+                }
             }
         }
+
+        // When the wall is behind the player generate a new wall
+        if (wallDistance > (dist + 2.5) && !collision) {
+            randomWall(WallPositions, skinniest, shortest);
+            this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
+            wallDistance = startingWallDistance;
+            scored = false;
+        }
+
+        // Handle jumping
+        if (!collision) {
+            if (spaceHasBeenPressed && !jumping) {
+                // Initial velocity based on length of space press
+                velocity = Math.min(160, spacePressDuration / 2.0) / 4000;
+                spaceHasBeenPressed = false;
+                jumping = true;
+            }
+            
+            // While in air
+            if (jumping) {
+                // How long have you been in the air
+                var currentTime = new Date().getTime();
+                var elapsedTime = (currentTime - spacePressEndTime) / 10;
+                // If player reaches the peak of the jump lower gravity so player can guide the cube into the hole
+                if (0 > velocity  && ! lowerGrav) {
+                    gravity *= lowerGravVal;
+                    lowerGrav = true;
+                }
+
+                // If the player has entered the hole try to update the score
+                if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5) && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
+                    if ((dist - 1.48) < wallDistance && !scored) {
+                        // Update the current score if no collision but shape passes through
+                        updateScore();
+                    }
+                }
+                // Otherwise change velocity based on gravity (else statement prevents collision on bottom of hole)
+                else {
+                    velocity = velocity - gravity * elapsedTime;
+                    height += velocity;
+                    // Can not go below cubeScale and above maxHeight
+                    height = Math.min(Math.max(cubeScale, height), maxHeight);
+                }
+
+                // If player hits the peak then stop moving upwards
+                if (height >= maxHeight) {
+                    velocity = 0;
+                }
+                // Change camera perspective on jump
+                cameraY = Math.max(2. * cubeScale, height);
+                // If you hit the ground
+                if (height == cubeScale) {
+                    velocity = 0;
+                    gravity *= (1 / lowerGravVal);
+                    lowerGrav = false;
+                    jumping = false;
+                    ableToLoadJump = true;
+                }
+            }
+            // Update cube
+            cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
+        }
+
+        // Check for the key states constantly for smooth movement
+        checkKeyStates();
+
+        if (reset) {
+            this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
+            reset = false;
+        }
+
+        // When cube positions change update
+        if (upped || downed || widened) {
+            this.cubeMesh = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
+            upped = false;
+            downed = false;
+            widened = false;
+        }
+    }
+    else {
+        
+        // Check for the key states constantly for smooth movement
+        checkKeyStates();
+
+        // Camera based on time
+        var time = new Date().getTime();
+        time /= 3000.;
+        var panDist = Math.cos(time) * (dist / 2);
+        pan = Math.sin(time) * (maxWallWidth * 0.9);
         xView = ((CubePositions[12] + CubePositions[21]) / 2.) + trans;
         yView = (CubePositions[13] + CubePositions[16]) / 2. + height;
         view = Matrix.lookAt(pan, 1.5, panDist, xView, yView, dist - 0.5, 0, 1, 0);  
-    }  
-    else {
-        view = Matrix.rotate(-this.yaw, 0, 1, 0).multiply(Matrix.rotate(-this.pitch, 1, 0, 0)).multiply(Matrix.translate(cameraX, cameraY, 0.)).inverse();
-    }
-    var wallModel = Matrix.translate(0, 1.5, wallDistance).multiply(Matrix.scale(3., 1.5, 1.));
-    var roadModel = Matrix.translate(0, 1., 0.).multiply(Matrix.scale(3., 1., 20.));
-    var leftTunnel = Matrix.translate(-2, 1.5, 0.).multiply(Matrix.scale(1., 1.5, 20.));
-    var rightTunnel = Matrix.translate(2., 1.5, 0.).multiply(Matrix.scale(1., 1.5, 20.));
-
-    if (!collision) {
-        wallDistance += wallSpeed;
-        if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5)) {
-            if (checkCollision(trans, height, cubeScale, maxWallWidth, maxWallHeight)) {
-                wallSpeed = 0.0;
-                collision = true;
-            }
-        }
     }
 
-    if (wallDistance > (dist + 2.5) && !collision) {
-        randomWall(WallPositions, skinniest, shortest);
-        this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
-        wallDistance = startingWallDistance;
-        scored = false;
-    }
-
-    // The total height that the cube will reach with velocity
-    // becomes true when space bar is released
-    if (! collision) {
-        if (spaceHasBeenPressed && !jumping) {
-            velocity = Math.min(160, spacePressDuration / 2.0) / 4000;
-            spaceHasBeenPressed = false;
-            jumping = true;
-            // ableToLoadJump = false;
-        }
-        
-        if (jumping) {
-            var currentTime = new Date().getTime();
-            var elapsedTime = (currentTime - spacePressEndTime) / 10;
-            if (0 > velocity  && ! lowerGrav) {
-                gravity *= lowerGravVal;
-                lowerGrav = true;
-            }
-
-
-            if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5) && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
-                if ((dist - 1.48) < wallDistance && !scored) {
-                    // Update the current score if no collision but shape passes through
-                    console.log("in here");
-                    updateScore();
-                }
-            }
-            else {
-                velocity = velocity - gravity * elapsedTime;
-                height += velocity;
-                height = Math.max(cubeScale, height);
-                height = Math.min(maxHeight, height);
-            }
-            if (height >= maxHeight) {
-                velocity = 0;
-            }
-            // Change camera perspective on jump
-            cameraY = Math.max(2. * cubeScale, height + cubeScale);
-            if (height == cubeScale) {
-                velocity = 0;
-                gravity *= (1 / lowerGravVal);
-                lowerGrav = false;
-                jumping = false;
-                ableToLoadJump = true;
-            }
-        }
-    }
-    cubeModel = Matrix.translate(trans, height, dist).multiply(Matrix.scale(cubeScale, cubeScale, cubeScale));
-
-    if (! collision) {
-        wallDistance += wallSpeed;
-        console.log(wallDistance);
-        if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5)) {
-            if (checkCollision(trans, height, cubeScale, maxWallWidth, maxWallHeight)) {
-                wallSpeed = 0.0;
-                collision = true;
-            }
-        }
-    }
-
-    if (wallDistance > (dist + 2.5) && !collision) {
-        randomWall(WallPositions, skinniest, shortest);
-        this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
-        wallDistance = startingWallDistance;
-        scored = false;
-    }
-
-    // check for the key states constantly for smooth movement
-    checkKeyStates();
-
-    if (reset) {
-        this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
-        reset = false;
-    }
-
-    if (upped || downed || widened) {
-        this.cubeMesh = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
-        upped = false;
-        downed = false;
-        widened = false;
-    }
-
+    // Render shapes
     this.tunnel1.render(gl, leftTunnel, view, projection, 3.0);
     this.tunnel2.render(gl, rightTunnel, view, projection, 3.0);
     this.road.render(gl, roadModel, view, projection, 2.0);

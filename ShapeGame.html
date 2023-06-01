@@ -34,16 +34,47 @@
             <canvas id="game" width="820" height="710"></canvas>
         </div>
     </div>
-    <div class = "scoreboard">
-        <p class = "info">Score:</p>
-        <p class = "info" id = "score" style = "color: yellow; left: 20%">0</p>
-        <p class = "info" style = "left: 42%;">Level:</p>
-        <p class = "info" id = "level" style = "color: rgb(0, 255, 0); left: 57%">1</p>
-    </div>
+
+    <!-- <div class="scoreboard" style = "top: 30%; left: calc(50vw - 150px); width: 300px;">
+        <p class = "info" style = "color: black;">Press Enter to Start</p>
+    </div> -->
+
     <script>
+        var enterMessage = false;
+
         function setupAssignment() {
             setupTask("game", Game, true);
         }
+
+        function checkPlaying() {
+            if (!playing) {
+                if (!enterMessage) {
+                    var enter = document.createElement('div');
+                    enter.className = 'scoreboard';
+                    enter.id = "true";
+                    enter.style = 'top: 30%; left: calc(50vw - 150px); width: 300px;';
+                    enter.innerHTML = '<p class="info" style="color: black; left: 8%; top: -42%;font-size: 30px;">Press Enter to Start</p>';
+
+                    document.body.appendChild(enter);
+                    enterMessage = true;
+                }
+                var control1 = document.createElement('div');
+                var control2 = document.createElement('div');
+                var control3 = document.createElement('div');
+                var control4 = document.createElement('div');
+                var control5 = document.createElement('div');
+                var control6 = document.createElement('div');
+                var control7 = document.createElement('div');
+            }
+            else {
+                var checkStartMessages = document.getElementById('true');
+                if (checkStartMessages) {
+                    checkStartMessages.parentNode.removeChild(checkStartMessages);
+                }
+            }
+        }
+
+        setInterval(checkPlaying, 200);
     </script>
 </body>
 
