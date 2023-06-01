@@ -160,14 +160,15 @@
                     document.body.appendChild(control7);
                     document.body.appendChild(control7txt);
 
-
                     enterMessage = true;
                 }
             }
             else {
-                var elementsToRemove = document.getElementsByClassName('controls');
-                while (elementsToRemove.length > 0) {
-                    elementsToRemove[0].parentNode.removeChild(elementsToRemove[0]);
+                if (!collision) {
+                    var elementsToRemove = document.getElementsByClassName('controls');
+                    while (elementsToRemove.length > 0) {
+                        elementsToRemove[0].parentNode.removeChild(elementsToRemove[0]);
+                    }
                 }
 
                 var elementsToRemove1 = document.getElementsByClassName('positiontxt');

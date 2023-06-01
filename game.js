@@ -366,6 +366,12 @@ function updateScore() {
         audio.currentTime = 0;
         splat.currentTime = 0;
         splat.play();
+
+        var enter = document.createElement('div');
+        enter.className = 'controls';
+        enter.style = 'top: 10%; left: calc(50vw - 150px); width: 300px;';
+        enter.innerHTML = '<p class="info" style="color: black; left: 8%; top: -42%;font-size: 30px;">Press Enter to Start</p>';
+        document.body.appendChild(enter);
     } 
     else {
         wallsPassed++;
