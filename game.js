@@ -187,7 +187,7 @@ function restartGame() {
     }
     else {
         gravity = .00008;
-        wallSpeed = .1;
+        wallSpeed = .05;
         spaceLength = 1;
         ellisTime = 2000;
     }
