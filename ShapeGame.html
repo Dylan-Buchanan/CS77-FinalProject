@@ -18,6 +18,9 @@
     <script src="game.js"></script>
     <script src="shapes.js"></script>
     <script src="movement.js"></script>
+    <audio id="gameSong" src="Cool.mp3"></audio>
+    <audio id="splat" src="Splat.mp3"></audio>
+    <audio id="ding" src="Bell.mp3"></audio>
 
 
 
@@ -35,46 +38,147 @@
         </div>
     </div>
 
-    <!-- <div class="scoreboard" style = "top: 30%; left: calc(50vw - 150px); width: 300px;">
-        <p class = "info" style = "color: black;">Press Enter to Start</p>
-    </div> -->
-
     <script>
         var enterMessage = false;
+        var resetSong = true;
+        var audio = document.getElementById("gameSong");
+
+        document.addEventListener('keydown', handleUserInteraction);
+        document.addEventListener('mousedown', handleUserInteraction);
 
         function setupAssignment() {
             setupTask("game", Game, true);
+            audio.play();
+        }
+
+        function handleUserInteraction() {
+            if (resetSong) {
+                audio.play();
+                resetSong = false;
+            }
+            document.removeEventListener('keydown', handleUserInteraction);
+            document.removeEventListener('mousedown', handleUserInteraction);
+        }
+
+        function music() {
+            if (!playing) {
+                if (audio.currentTime >= 6.58) {
+                    audio.currentTime = 0;
+                    audio.play();
+                }
+            }
+            else if (audio.currentTime >= 197) {
+                audio.currentTime = 0;
+                audio.play();
+            }
         }
 
         function checkPlaying() {
             if (!playing) {
                 if (!enterMessage) {
                     var enter = document.createElement('div');
-                    enter.className = 'scoreboard';
-                    enter.id = "true";
+                    var control1 = document.createElement('div');
+                    var control1txt = document.createElement('div');
+                    var control2 = document.createElement('div');
+                    var control2txt = document.createElement('div');
+                    var control3 = document.createElement('div');
+                    var control3txt = document.createElement('div');
+                    var control4 = document.createElement('div');
+                    var control4txt = document.createElement('div');
+                    var control5 = document.createElement('div');
+                    var control5txt = document.createElement('div');
+                    var control6 = document.createElement('div');
+                    var control6txt = document.createElement('div');
+                    var control7 = document.createElement('div');
+                    var control7txt = document.createElement('div');
+
+                    enter.className = 'controls';
                     enter.style = 'top: 30%; left: calc(50vw - 150px); width: 300px;';
                     enter.innerHTML = '<p class="info" style="color: black; left: 8%; top: -42%;font-size: 30px;">Press Enter to Start</p>';
 
+                    control1.className = 'controls';
+                    control1.style = "top: 10%; left: 2%; width: 50px; height: 50px;";
+                    control1.innerHTML = '<p class="info" style="color: black; left: 32%;">A</p>';
+                    control1txt.className = 'positiontxt';
+                    control1txt.innerHTML = '<p class = "info" style="color: black; font-size: 60px;">&#x2190</p>';
+
+                    control2.className = 'controls';
+                    control2.style = "top: 18%; left: 2%; width: 50px; height: 50px;";
+                    control2.innerHTML = '<p class="info" style="color: black; left: 32%;">D</p>';
+                    control2txt.className = 'positiontxt';
+                    control2txt.style = "top: 9%";
+                    control2txt.innerHTML = '<p class = "info" style="color: black; font-size: 60px;">&#x2192</p>';
+
+                    control3.className = 'controls';
+                    control3.style = "top: 26%; left: 2%; width: 50px; height: 50px;";
+                    control3.innerHTML = '<p class="info" style="color: black; left: 36%;">&#x2191</p>';
+                    control3txt.className = 'positiontxt';
+                    control3txt.style = "top: 26%";
+                    control3txt.innerHTML = '<p class = "info" style="color: black; font-size: 20px;">Taller</p>';
+
+                    control4.className = 'controls';
+                    control4.style = "top: 34%; left: 2%; width: 50px; height: 50px;";
+                    control4.innerHTML = '<p class="info" style="color: black; left: 36%;">&#x2193</p>';
+                    control4txt.className = 'positiontxt';
+                    control4txt.style = "top: 34%";
+                    control4txt.innerHTML = '<p class = "info" style="color: black; font-size: 20px;">Shorter</p>';
+
+                    control5.className = 'controls';
+                    control5.style = "top: 42%; left: 2%; width: 50px; height: 50px;";
+                    control5.innerHTML = '<p class="info" style="color: black; left: 28%;">&#x2190</p>';
+                    control5txt.className = 'positiontxt';
+                    control5txt.style = "top: 42%";
+                    control5txt.innerHTML = '<p class = "info" style="color: black; font-size: 20px;">Widen</p>';
+
+                    control6.className = 'controls';
+                    control6.style = "top: 50%; left: 2%; width: 50px; height: 50px;";
+                    control6.innerHTML = '<p class="info" style="color: black; left: 28%;">&#x2192</p>';
+                    control6txt.className = 'positiontxt';
+                    control6txt.style = "top: 50%";
+                    control6txt.innerHTML = '<p class = "info" style="color: black; font-size: 20px;">Narrow</p>';
+
+                    control7.className = 'controls';
+                    control7.style = "top: 58%; left: 2%; width: 80px; height: 50px;";
+                    control7.innerHTML = '<p class="info" style="color: black; left: 14%;">Space</p>';
+                    control7txt.className = 'positiontxt';
+                    control7txt.style = "top: 58%";
+                    control7txt.innerHTML = '<p class = "info" style="color: black; font-size: 20px;">Jump</p>';
+
                     document.body.appendChild(enter);
+                    document.body.appendChild(control1);
+                    document.body.appendChild(control1txt);
+                    document.body.appendChild(control2);
+                    document.body.appendChild(control2txt);
+                    document.body.appendChild(control3);
+                    document.body.appendChild(control3txt);
+                    document.body.appendChild(control4);
+                    document.body.appendChild(control4txt);
+                    document.body.appendChild(control5);
+                    document.body.appendChild(control5txt);
+                    document.body.appendChild(control6);
+                    document.body.appendChild(control6txt);
+                    document.body.appendChild(control7);
+                    document.body.appendChild(control7txt);
+
+
                     enterMessage = true;
                 }
-                var control1 = document.createElement('div');
-                var control2 = document.createElement('div');
-                var control3 = document.createElement('div');
-                var control4 = document.createElement('div');
-                var control5 = document.createElement('div');
-                var control6 = document.createElement('div');
-                var control7 = document.createElement('div');
             }
             else {
-                var checkStartMessages = document.getElementById('true');
-                if (checkStartMessages) {
-                    checkStartMessages.parentNode.removeChild(checkStartMessages);
+                var elementsToRemove = document.getElementsByClassName('controls');
+                while (elementsToRemove.length > 0) {
+                    elementsToRemove[0].parentNode.removeChild(elementsToRemove[0]);
+                }
+
+                var elementsToRemove1 = document.getElementsByClassName('positiontxt');
+                while (elementsToRemove1.length > 0) {
+                    elementsToRemove1[0].parentNode.removeChild(elementsToRemove1[0]);
                 }
             }
         }
 
         setInterval(checkPlaying, 200);
+        setInterval(music, 1);
     </script>
 </body>
 

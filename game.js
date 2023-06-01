@@ -45,7 +45,7 @@ var BlackVertexSource = `
 
         vec3 LightDirection = normalize(vec3(View * vec4(LightPosition, 1.0)) - newPosition);
 
-        float DiffuseFactor = max(dot(normal, LightDirection), 0.0);
+        float DiffuseFactor = max(dot(Normal, LightDirection), 0.0);
 
         float Distance = length(LightPosition - vec3(Model * vec4(Position, 1.0)));
         vec3 SurfaceColor = LightIntensity / (Distance * Distance);
@@ -68,6 +68,7 @@ var BlackFragmentSource = `
 
 
 //////////  Global variables  //////////
+var DylEllMode = 0; // 0 = Dylan 1 = Ellis
 // Cube
 var speed = 0.05; // Cube movement and growth speed
 const tallest = 2.0; // tallest cube height
@@ -94,6 +95,7 @@ let spacePressed = false;
 let spacePressStartTime = null;
 let spacePressDuration = 0;
 let spacePressEndTime = 0;
+var spaceLength;
 var velocity = 0; // How the y-value of the cube is changing
 var gravity = .000008; // How fast the cube falls
 const lowerGravVal = 0.01;
@@ -164,11 +166,29 @@ function restartGame() {
         document.body.appendChild(scoreboardDiv);
     }
 
+    if (playing) {
+        var audio = document.getElementById("gameSong");
+        audio.currentTime = 0;
+        audio.play();
+    }
+
     resetCube();
     randomWall(WallPositions, skinniest, shortest);
     trans = 0; // Cube X-change
     height = cubeScale; // Cube Y-change (Set to cube scale to move it out of the floor)
     speed = 0.05;
+
+    // Computer Based Variables (processing speed)
+    if (DylEllMode == 0) {
+        gravity = .000008; // How fast the cube falls
+        wallSpeed = .01;
+        spaceLength = 2;
+    }
+    else {
+        gravity = .00008;
+        wallSpeed = .1;
+        spaceLength = 1;
+    }
 
     // Movement variables
     collision = false;
@@ -185,7 +205,6 @@ function restartGame() {
     spacePressDuration = 0;
     spacePressEndTime = 0;
     velocity = 0; // How the y-value of the cube is changing
-    gravity = .000008; // How fast the cube falls
     lowerGrav = false;
     for (key in keyStates) {
         keyStates[key] = false;
@@ -195,7 +214,6 @@ function restartGame() {
     startingWallDistance = -15.;
     wallDistance = startingWallDistance; // Distance from camera
     wallsPassed = 0; // Number of walls player has made it through
-    wallSpeed = .01;
 
     // Game variables
     level = 1;
@@ -341,10 +359,16 @@ function checkKeyStates() {
 function updateScore() {
     // Check if the cube collides with the wall
     if (collision) {
-        return; // Perform Game Over Functions
+        // Perform Game Over Functions
+        var audio = document.getElementById("gameSong");
+        var splat = document.getElementById("splat");
+        audio.pause();
+        audio.currentTime = 0;
+        splat.currentTime = 0;
+        splat.play();
     } 
     else {
-    wallsPassed++;
+        wallsPassed++;
         // Change the level and wall speed based on the number of walls passed
         if (wallsPassed % wallsPerLevel == 0) {
             level++;
@@ -361,6 +385,10 @@ function updateScore() {
         var scoreboardElement = document.getElementById('score');
         scoreboardElement.textContent = score;
         scored = true;
+
+        var pass = document.getElementById("ding");
+        pass.currentTime = 0;
+        pass.play();
     }
 }
 
@@ -391,7 +419,9 @@ Game.prototype.render = function(gl, w, h)
                 pan = pan - (speed * 0.25);
             }
             else {
-                speed = speed / 4.0;
+                if (speed == 0.05) {
+                    speed = speed / 4.0;
+                }
                 pan = pan + speed;
                 if (pan >= maxWallWidth) {
                     pan = maxWallWidth;
@@ -413,6 +443,7 @@ Game.prototype.render = function(gl, w, h)
                 if (checkCollision(trans, height, cubeScale, maxWallWidth, maxWallHeight)) {
                     wallSpeed = 0.0;
                     collision = true;
+                    updateScore();
                 }
             }
         }
@@ -429,7 +460,7 @@ Game.prototype.render = function(gl, w, h)
         if (!collision) {
             if (spaceHasBeenPressed && !jumping) {
                 // Initial velocity based on length of space press
-                velocity = Math.min(160, spacePressDuration / 2.0) / 4000;
+                velocity = Math.min(160, spacePressDuration / spaceLength) / 4000;
                 spaceHasBeenPressed = false;
                 jumping = true;
             }
@@ -496,7 +527,6 @@ Game.prototype.render = function(gl, w, h)
         }
     }
     else {
-        
         // Check for the key states constantly for smooth movement
         checkKeyStates();
 
