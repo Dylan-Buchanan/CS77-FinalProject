@@ -96,7 +96,7 @@ var BlackFragmentSource = `
 
 
 //////////  Global variables  //////////
-var DylEllMode = 1; // 0 = Dylan 1 = Ellis
+var DylEllMode = 0; // 0 = Dylan 1 = Ellis
 // Cube
 var speed = 0.05; // Cube movement and growth speed
 const tallest = 2.0; // tallest cube height
@@ -127,7 +127,7 @@ var spaceLength;
 var ellisTime;
 var velocity = 0; // How the y-value of the cube is changing
 var gravity = .00008; // How fast the cube falls
-const lowerGravVal = 0.1;
+const lowerGravVal = 0.01;
 var lowerGrav = false;
 const maxHeight = 3.;
 const keyStates = {
@@ -445,7 +445,7 @@ var why = 0;
 Game.prototype.render = function(gl, w, h)
 {
     // gl initialization
-    gl.clearColor(1., 1., 1., 1.0);
+    gl.clearColor(.2, 0., .3, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
     // Model space intialization
