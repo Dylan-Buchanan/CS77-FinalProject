@@ -124,6 +124,7 @@ let spacePressStartTime = null;
 let spacePressDuration = 0;
 let spacePressEndTime = 0;
 var spaceLength;
+var ellisTime;
 var velocity = 0; // How the y-value of the cube is changing
 var gravity = .00008; // How fast the cube falls
 const lowerGravVal = 0.1;
@@ -210,11 +211,14 @@ function restartGame() {
         gravity = .000008; // How fast the cube falls
         wallSpeed = .01;
         spaceLength = 2;
+        ellisTime = 4000;
     }
     else {
         gravity = .00008;
         wallSpeed = .05;
+        wallSpeed = .05;
         spaceLength = 1;
+        ellisTime = 2000;
     }
 
     // Movement variables
@@ -496,7 +500,7 @@ Game.prototype.render = function(gl, w, h)
         if (!collision) {
             if (spaceHasBeenPressed && !jumping) {
                 // Initial velocity based on length of space press
-                velocity = Math.min(160, spacePressDuration / spaceLength) / 2000;
+                velocity = Math.min(160, spacePressDuration / spaceLength) / ellisTime;
                 spaceHasBeenPressed = false;
                 jumping = true;
             }
