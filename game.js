@@ -96,7 +96,7 @@ var BlackFragmentSource = `
 
 
 //////////  Global variables  //////////
-var DylEllMode = 1; // 0 = Dylan 1 = Ellis
+var DylEllMode = 0; // 0 = Dylan 1 = Ellis
 // Cube
 var speed = 0.05; // Cube movement and growth speed
 const tallest = 2.0; // tallest cube height
@@ -127,7 +127,7 @@ var spaceLength;
 var ellisTime;
 var velocity = 0; // How the y-value of the cube is changing
 var gravity = .00008; // How fast the cube falls
-const lowerGravVal = 0.1;
+const lowerGravVal = 0.01;
 var lowerGrav = false;
 const maxHeight = 3.;
 const keyStates = {
@@ -413,10 +413,20 @@ function updateScore() {
             startingWallDistance -= level * 5.;
             var scoreboardElement = document.getElementById('level');
             scoreboardElement.textContent = level;
+
+            var lvl = document.getElementById("nextlevel");
+            lvl.currentTime = 0;
+            lvl.play();
         }
         var cubeVolume = ((CubePositions[21] - CubePositions[12]) ) * ((CubePositions[16] - CubePositions[13]) ) * cubeScale;
         var holeVolume = ((WallPositions[63] - WallPositions[51]) ) * ((WallPositions[52] - WallPositions[49]) ) * maxWallHeight * maxWallWidth;
-        score += Math.min(100, Math.ceil((cubeVolume / holeVolume) * 100));
+        var scoreInc = Math.min(100, Math.ceil((cubeVolume / holeVolume) * 100));
+        score += scoreInc;
+        if (scoreInc > 80.) {
+            var tight = document.getElementById("tight");
+            tight.currentTime = 0;
+            tight.play();
+        }
 
         // Update the score
         var scoreboardElement = document.getElementById('score');
@@ -432,7 +442,7 @@ function updateScore() {
 Game.prototype.render = function(gl, w, h)
 {
     // gl initialization
-    gl.clearColor(.2, .0, .3, 1.0);
+    gl.clearColor(1., 1., 1., 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
     // Model space intialization
@@ -444,8 +454,6 @@ Game.prototype.render = function(gl, w, h)
     var roadModel = Matrix.translate(0., 1., 0.).multiply(Matrix.scale(maxWallWidth, 1., 20.));
     var leftTunnel = Matrix.translate(-maxWallWidth - 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
     var rightTunnel = Matrix.translate(maxWallWidth - 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
-    // var leftTunnel = Matrix.translate(-maxWallWidth, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
-    // var rightTunnel = Matrix.translate(maxWallWidth, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
 
 
     if (playing) {
