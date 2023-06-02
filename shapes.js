@@ -266,11 +266,11 @@ var RoadNormals = [
   0, 1, 0,
   0, 1, 0,
   0, 1, 0
-]
+];
 
 var RoadIndices = [
   0, 1, 2, 0, 2, 3
-]
+];
 
 var LeftTunnelPositions = [
    // Left face
@@ -285,11 +285,11 @@ var LeftTunnelNormals = [
   1, 0, 0,
   1, 0, 0,
   1, 0, 0
-]
+];
 
 var LeftTunnelIndices = [
   0, 1, 2, 0, 2, 3
-]
+];
 
 var RightTunnelPositions = [
   // Right face
@@ -304,8 +304,9 @@ var RightTunnelNormals = [
  -1, 0, 0,
  -1, 0, 0,
  -1, 0, 0
-]
+];
 
 var RightTunnelIndices = [
  0, 1, 2, 0, 2, 3
-]
+];
+

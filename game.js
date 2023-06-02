@@ -20,16 +20,16 @@ var BlackVertexSource = `
 
         
         if (Type == 1.0) { 
-            Color = vec3(1.0, 0.0, 0.0);
+            Color = vec3(1.0, 0.6, 0.0);
         }
         else if (Type == 2.0) {
-            Color = vec3(1.0, 1.0, 0.0);
+            Color = vec3(.6, 0.0, 1.0);
         }
         else if (Type == 3.0) {
-            Color = vec3(0.0, 0.0, 1.0);
+            Color = vec3(.7, 0.0, 1.0);
         }
         else {
-            Color = vec3(0.1, 0.5, 0.1);
+            Color = vec3(.7, 0., .7);
         }
         vec3 ka = Color;
         vec3 kd = 0.7 * Color;
@@ -96,6 +96,7 @@ var BlackFragmentSource = `
 
 
 //////////  Global variables  //////////
+var DylEllMode = 1; // 0 = Dylan 1 = Ellis
 // Cube
 var speed = 0.05; // Cube movement and growth speed
 const tallest = 2.0; // tallest cube height
@@ -122,6 +123,7 @@ let spacePressed = false;
 let spacePressStartTime = null;
 let spacePressDuration = 0;
 let spacePressEndTime = 0;
+var spaceLength;
 var velocity = 0; // How the y-value of the cube is changing
 var gravity = .00008; // How fast the cube falls
 const lowerGravVal = 0.1;
@@ -171,9 +173,8 @@ var Game = function(gl)
     }
     this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
     this.cubeMesh = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
-    // this.road = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     this.road = new ShadedTriangleMesh(gl, RoadPositions, RoadNormals, RoadIndices, BlackVertexSource, BlackFragmentSource);
-    this.tunnel1 = new ShadedTriangleMesh(gl, LeftTunnelPositions, LeftTunnelNormals, LeftTunnelIndices, BlackVertexSource, BlackFragmentSource);
+    this.tunnel1 = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     this.tunnel2 = new ShadedTriangleMesh(gl, RightTunnelPositions, RightTunnelNormals, RightTunnelIndices, BlackVertexSource, BlackFragmentSource);
     gl.enable(gl.DEPTH_TEST);
 }
@@ -192,11 +193,29 @@ function restartGame() {
         document.body.appendChild(scoreboardDiv);
     }
 
+    if (playing) {
+        var audio = document.getElementById("gameSong");
+        audio.currentTime = 0;
+        audio.play();
+    }
+
     resetCube();
     randomWall(WallPositions, skinniest, shortest);
     trans = 0; // Cube X-change
     height = cubeScale; // Cube Y-change (Set to cube scale to move it out of the floor)
     speed = 0.05;
+
+    // Computer Based Variables (processing speed)
+    if (DylEllMode == 0) {
+        gravity = .000008; // How fast the cube falls
+        wallSpeed = .01;
+        spaceLength = 2;
+    }
+    else {
+        gravity = .00008;
+        wallSpeed = .05;
+        spaceLength = 1;
+    }
 
     // Movement variables
     collision = false;
@@ -213,7 +232,6 @@ function restartGame() {
     spacePressDuration = 0;
     spacePressEndTime = 0;
     velocity = 0; // How the y-value of the cube is changing
-    gravity = .00008; // How fast the cube falls
     lowerGrav = false;
     for (key in keyStates) {
         keyStates[key] = false;
@@ -223,7 +241,6 @@ function restartGame() {
     startingWallDistance = -15.;
     wallDistance = startingWallDistance; // Distance from camera
     wallsPassed = 0; // Number of walls player has made it through
-    wallSpeed = .05;
 
     // Game variables
     level = 1;
@@ -369,15 +386,27 @@ function checkKeyStates() {
 function updateScore() {
     // Check if the cube collides with the wall
     if (collision) {
-        return; // Perform Game Over Functions
+        // Perform Game Over Functions
+        var audio = document.getElementById("gameSong");
+        var splat = document.getElementById("splat");
+        audio.pause();
+        audio.currentTime = 0;
+        splat.currentTime = 0;
+        splat.play();
+
+        var enter = document.createElement('div');
+        enter.className = 'controls';
+        enter.style = 'top: 10%; left: calc(50vw - 150px); width: 300px;';
+        enter.innerHTML = '<p class="info" style="color: black; left: 8%; top: -42%;font-size: 30px;">Press Enter to Start</p>';
+        document.body.appendChild(enter);
     } 
     else {
-    wallsPassed++;
+        wallsPassed++;
         // Change the level and wall speed based on the number of walls passed
         if (wallsPassed % wallsPerLevel == 0) {
             level++;
             wallSpeed *= 2.0;
-            startingWallDistance -= 5.;
+            startingWallDistance -= level * 5.;
             var scoreboardElement = document.getElementById('level');
             scoreboardElement.textContent = level;
         }
@@ -389,13 +418,17 @@ function updateScore() {
         var scoreboardElement = document.getElementById('score');
         scoreboardElement.textContent = score;
         scored = true;
+
+        var pass = document.getElementById("ding");
+        pass.currentTime = 0;
+        pass.play();
     }
 }
 
 Game.prototype.render = function(gl, w, h)
 {
     // gl initialization
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.clearColor(.2, .0, .3, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
     // Model space intialization
@@ -404,8 +437,8 @@ Game.prototype.render = function(gl, w, h)
 
     // Models 
     var wallModel = Matrix.translate(0, maxWallHeight, wallDistance).multiply(Matrix.scale(maxWallWidth, maxWallHeight, 1.));
-    var roadModel = Matrix.translate(0, 1., 0.).multiply(Matrix.scale(maxWallWidth, 1., 20.));
-    var leftTunnel = Matrix.translate(-maxWallWidth + 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
+    var roadModel = Matrix.translate(0., 1., 0.).multiply(Matrix.scale(maxWallWidth, 1., 20.));
+    var leftTunnel = Matrix.translate(-maxWallWidth - 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
     var rightTunnel = Matrix.translate(maxWallWidth - 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
     // var leftTunnel = Matrix.translate(-maxWallWidth, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
     // var rightTunnel = Matrix.translate(maxWallWidth, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
@@ -422,7 +455,9 @@ Game.prototype.render = function(gl, w, h)
                 pan = pan - (speed * 0.25);
             }
             else {
-                speed = speed / 4.0;
+                if (speed == 0.05) {
+                    speed = speed / 4.0;
+                }
                 pan = pan + speed;
                 if (pan >= maxWallWidth) {
                     pan = maxWallWidth;
@@ -444,6 +479,7 @@ Game.prototype.render = function(gl, w, h)
                 if (checkCollision(trans, height, cubeScale, maxWallWidth, maxWallHeight)) {
                     wallSpeed = 0.0;
                     collision = true;
+                    updateScore();
                 }
             }
         }
@@ -460,7 +496,7 @@ Game.prototype.render = function(gl, w, h)
         if (!collision) {
             if (spaceHasBeenPressed && !jumping) {
                 // Initial velocity based on length of space press
-                velocity = Math.min(160, spacePressDuration) / 2000;
+                velocity = Math.min(160, spacePressDuration / spaceLength) / 2000;
                 spaceHasBeenPressed = false;
                 jumping = true;
             }
@@ -527,7 +563,6 @@ Game.prototype.render = function(gl, w, h)
         }
     }
     else {
-        
         // Check for the key states constantly for smooth movement
         checkKeyStates();
 
