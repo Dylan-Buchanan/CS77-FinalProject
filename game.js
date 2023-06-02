@@ -52,7 +52,7 @@ var BlackVertexSource = `
 
         if (Type == 3.0) {
             Distance = length(LightPosition - vec3(Model * vec4(Position, 1.0))) / Position.z;
-            if (Distance > 1.86) {
+            if (Distance > 20.86) {
                 Color = vec3(0., 0., 0.);
                 ka = Color;
                 kd = 0.7 * Color;
@@ -61,7 +61,7 @@ var BlackVertexSource = `
 
         else if (Type == 2.0) {
             Distance = length(LightPosition - vec3(Model * vec4(Position, 1.0))) / Position.z;
-            if (Distance < -20.) {
+            if (Distance < -15.) {
                 Color = vec3(0.1, 0.1, 0.);
                 ka = Color;
                 kd = 0.7 * Color;
@@ -175,7 +175,7 @@ var Game = function(gl)
     this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
     this.cubeMesh = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
     this.road = new ShadedTriangleMesh(gl, RoadPositions, RoadNormals, RoadIndices, BlackVertexSource, BlackFragmentSource);
-    this.tunnel1 = new ShadedTriangleMesh(gl, CubePositions, CubeNormals, CubeIndices, BlackVertexSource, BlackFragmentSource);
+    this.tunnel1 = new ShadedTriangleMesh(gl, LeftTunnelPositions, LeftTunnelNormals, LeftTunnelIndices, BlackVertexSource, BlackFragmentSource);
     this.tunnel2 = new ShadedTriangleMesh(gl, RightTunnelPositions, RightTunnelNormals, RightTunnelIndices, BlackVertexSource, BlackFragmentSource);
     gl.enable(gl.DEPTH_TEST);
 }
@@ -429,6 +429,9 @@ function updateScore() {
     }
 }
 
+var camHolder = 2. * cubeScale;
+var why = 0;
+
 Game.prototype.render = function(gl, w, h)
 {
     // gl initialization
@@ -441,8 +444,10 @@ Game.prototype.render = function(gl, w, h)
 
     // Models 
     var wallModel = Matrix.translate(0, maxWallHeight, wallDistance).multiply(Matrix.scale(maxWallWidth, maxWallHeight, 1.));
-    var roadModel = Matrix.translate(0., 1., 0.).multiply(Matrix.scale(maxWallWidth, 1., 20.));
-    var leftTunnel = Matrix.translate(-maxWallWidth - 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
+    // var roadModel = Matrix.translate(0., 1., 0.).multiply(Matrix.scale(maxWallWidth, 1., 20.));
+    var roadModel = new Matrix();
+    var leftTunnel = Matrix.translate(-maxWallWidth + 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
+    // var leftTunnel = new Matrix();
     var rightTunnel = Matrix.translate(maxWallWidth - 1, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
     // var leftTunnel = Matrix.translate(-maxWallWidth, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
     // var rightTunnel = Matrix.translate(maxWallWidth, 2 * maxWallHeight, 0.).multiply(Matrix.scale(1., 2 * maxWallHeight, 20.));
@@ -489,7 +494,7 @@ Game.prototype.render = function(gl, w, h)
         }
 
         // When the wall is behind the player generate a new wall
-        if (wallDistance > (dist + 2.5) && !collision) {
+        if (wallDistance > (dist + 1.) && !collision) {
             randomWall(WallPositions, skinniest, shortest);
             this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
             wallDistance = startingWallDistance;
@@ -518,10 +523,20 @@ Game.prototype.render = function(gl, w, h)
 
                 // If the player has entered the hole try to update the score
                 if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5) && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
-                    if ((dist - 1.48) < wallDistance && !scored) {
-                        // Update the current score if no collision but shape passes through
-                        updateScore();
+                    if ((CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
+                        if ((dist - 1.48) < wallDistance && !scored) {
+                            // Update the current score if no collision but shape passes through
+                            updateScore();
+                        }
+                        velocity = velocity - gravity * elapsedTime;
+                        height += velocity;
+                        // Can not go below cubeScale and above maxHeight
+
+                        // Smoothly jump over wall
+                        height = Math.max(height,  (WallPositions[73] * 1.5) + 2.);
+                        camHolder = height;
                     }
+                    
                 }
                 // Otherwise change velocity based on gravity (else statement prevents collision on bottom of hole)
                 else {
@@ -537,8 +552,10 @@ Game.prototype.render = function(gl, w, h)
                 }
                 // Change camera perspective on jump
                 cameraY = Math.max(2. * cubeScale, height);
+
                 // If you hit the ground
                 if (height == cubeScale) {
+                    // cameraY = Math.max(2. * cubeScale, height);
                     velocity = 0;
                     gravity *= (1 / lowerGravVal);
                     lowerGrav = false;
