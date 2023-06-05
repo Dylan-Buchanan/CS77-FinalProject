@@ -110,25 +110,25 @@ var trans = 0; // Cube X-change
 var height = cubeScale; // Cube Y-change (Set to cube scale to move it out of the floor)
 
 // Movement variables
-var collision = false;
-var upped = false;
-var downed = false;
-var widened = false;
-var space = false;
-var ableToLoadJump = true;
-var jumping = false;
+var collision;
+var upped;
+var downed;
+var widened;
+var space;
+var ableToLoadJump;
+var jumping;
 // variables for space bar press
-let spaceHasBeenPressed = false;
-let spacePressed = false;
-let spacePressStartTime = null;
-let spacePressDuration = 0;
-let spacePressEndTime = 0;
+var spaceHasBeenPressed;
+var spacePressed;
+var spacePressStartTime;
+var spacePressDuration;
+var spacePressEndTime;
 var spaceLength;
 var ellisTime;
-var velocity = 0; // How the y-value of the cube is changing
-var gravity = .00008; // How fast the cube falls
-const lowerGravVal = 0.01;
-var lowerGrav = false;
+var velocity; // How the y-value of the cube is changing
+var gravity; // How fast the cube falls
+var lowerGravVal;
+var lowerGrav;
 const maxHeight = 3.;
 const keyStates = {
     w: false,
@@ -147,21 +147,22 @@ const maxWallWidth = 3.0;
 const maxWallHeight = 1.5;
 var startingWallDistance = -15.;
 var wallDistance = startingWallDistance; // Distance from camera
-var wallSpeed = 0.1;
-var wallsPassed = 0; // Number of walls player has made it through
+var wallSpeed;
+var wallsPassed; // Number of walls player has made it through
 
 // Game variables
-var level = 1;
+var level;
 const wallsPerLevel = 4;
-var score = 0;
-var scored = false;
+var score;
+var scored;
 var reset = false;
 var playing = false;
 
 // Camera variables
-var cameraX = 0.;
-var cameraY = 1.;
+var cameraX;
+var cameraY;
 var pan = maxWallWidth;
+var panLeft;
 /////////////////////////////////////////////////
 
 var Game = function(gl)
@@ -209,16 +210,17 @@ function restartGame() {
     // Computer Based Variables (processing speed)
     if (DylEllMode == 0) {
         gravity = .000008; // How fast the cube falls
-        wallSpeed = .01;
+        wallSpeed = .02;
         spaceLength = 2;
         ellisTime = 4000;
+        lowerGravVal = 0.01;
     }
     else {
         gravity = .00008;
         wallSpeed = .05;
-        wallSpeed = .05;
         spaceLength = 1;
         ellisTime = 2000;
+        lowerGravVal = 0.1;
     }
 
     // Movement variables
@@ -260,7 +262,8 @@ function restartGame() {
     // Camera variables
     cameraX = 0.;
     cameraY = 1.;
-    pan = 10.;
+    pan = maxWallWidth;
+    panLeft = true;
 }
 
 
@@ -439,9 +442,6 @@ function updateScore() {
     }
 }
 
-var camHolder = 2. * cubeScale;
-var why = 0;
-
 Game.prototype.render = function(gl, w, h)
 {
     // gl initialization
@@ -465,20 +465,22 @@ Game.prototype.render = function(gl, w, h)
         // Cutscene
         if (collision) {
             var panDist = (dist) * Math.abs(pan / 3.5);
-            if (pan <= maxWallWidth && pan > (maxWallWidth * 0.9) && speed == 0.05) {
-                pan = pan - (speed * 0.02);
-            }
-            else if (pan <= (maxWallWidth * 0.9)  && pan >= (-maxWallWidth * 0.9) && speed == 0.05) {
-                pan = pan - (speed * 0.25);
+            if (panLeft) {
+                if (pan <= maxWallWidth && pan > (maxWallWidth * 0.9)) {
+                    pan = pan - (speed * 0.02);
+                }
+                else if (pan <= (maxWallWidth * 0.9) && pan >= -maxWallWidth) {
+                    pan = pan - (speed * 0.25);
+                }
+                else {
+                    panLeft = false;
+                }
             }
             else {
-                if (speed == 0.05) {
-                    speed = speed / 4.0;
-                }
-                pan = pan + speed;
+                pan = pan + (speed * .25);
                 if (pan >= maxWallWidth) {
                     pan = maxWallWidth;
-                    speed = 0.05;
+                    panLeft = true;
                 }
             }
             xView = ((CubePositions[12] + CubePositions[21]) / 2.) + trans;
@@ -496,6 +498,7 @@ Game.prototype.render = function(gl, w, h)
                 if (checkCollision(trans, height, cubeScale, maxWallWidth, maxWallHeight)) {
                     wallSpeed = 0.0;
                     collision = true;
+                    pan = maxWallWidth;
                     updateScore();
                 }
             }
@@ -507,6 +510,10 @@ Game.prototype.render = function(gl, w, h)
             this.wall = new ShadedTriangleMesh(gl, WallPositions, WallNormals, WallIndices, BlackVertexSource, BlackFragmentSource);
             wallDistance = startingWallDistance;
             scored = false;
+            if (lowerGrav) {
+                gravity *= (1 / lowerGravVal);
+                lowerGrav = false;
+            }
         }
 
         // Handle jumping
@@ -524,13 +531,13 @@ Game.prototype.render = function(gl, w, h)
                 var currentTime = new Date().getTime();
                 var elapsedTime = (currentTime - spacePressEndTime) / 10;
                 // If player reaches the peak of the jump lower gravity so player can guide the cube into the hole
-                if (0 > velocity  && ! lowerGrav) {
+                if (0 > velocity  && ! lowerGrav && wallDistance > (startingWallDistance + 2.)) {
                     gravity *= lowerGravVal;
                     lowerGrav = true;
                 }
 
                 // If the player has entered the hole try to update the score
-                if (wallDistance > (dist - 1.5) && wallDistance < (dist + 1.5) && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
+                if (wallDistance > (dist - 1.) && wallDistance < (dist + 1.5) && (CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
                     if ((CubePositions[14] * cubeScale) + height > (WallPositions[73] * 1.5) + 1.) {
                         if ((dist - 1.48) < wallDistance && !scored) {
                             // Update the current score if no collision but shape passes through
@@ -542,7 +549,6 @@ Game.prototype.render = function(gl, w, h)
 
                         // Smoothly jump over wall
                         height = Math.max(height,  (WallPositions[73] * 1.5) + 2.);
-                        camHolder = height;
                     }
                     
                 }
@@ -565,8 +571,10 @@ Game.prototype.render = function(gl, w, h)
                 if (height == cubeScale) {
                     // cameraY = Math.max(2. * cubeScale, height);
                     velocity = 0;
-                    gravity *= (1 / lowerGravVal);
-                    lowerGrav = false;
+                    if (lowerGrav) {
+                        gravity *= (1 / lowerGravVal);
+                        lowerGrav = false;
+                    }
                     jumping = false;
                     ableToLoadJump = true;
                 }
